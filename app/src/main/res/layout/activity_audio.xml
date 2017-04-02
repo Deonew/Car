@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:text="audio record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView3" />
+
+    <TextView
+        android:text="TextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView2" />
+
+    <Button
+        android:text="start record audio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/startRecord" />
+
+    <Button
+        android:text="stop record audio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/stopRecord" />
+
+    <Button
+        android:text="start play"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/startPlay" />
+
+    <Button
+        android:text="stop play"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/stopPlay" />
+</LinearLayout>
