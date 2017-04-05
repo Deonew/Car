@@ -243,7 +243,9 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         initRecvH264TH();
 
         //
-        init(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
+//        init(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
+
+        initPlaySurfaceView();
 
 //        mSendH264Run.mRecUIHandler.sendEmptyMessage(0);
 
@@ -690,6 +692,13 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 super.handleMessage(msg);
                 videoStatus.append(msg.obj.toString());
 //                videoStatus.append("h,");
+
+//                switch (msg.what){
+//                    case 0x3://data from recv thread
+////                        getTotalBuffer()
+//                        break;
+//
+//                }
             }
         };
 
@@ -1479,14 +1488,31 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 public void handleMessage(Message msg) {
                     super.handleMessage(msg);
                     //handle message from sub-thread
-                    sendH264Status.setText(msg.obj.toString());
+//                    sendH264Status.setText(msg.obj.toString());
+//                    sendH264Status.append("o");
+
+
+                    switch (msg.what){
+                        case 0x3:
+                            //write into total buffer
+                            byte[] tempB = (byte[])msg.obj;
+                            getTotalBuffer();
+                            System.arraycopy(tempB,0,getTotalBuffer(),totalBufferIndex,tempB.length);
+                            //tempB.length should be changed
+                            totalBufferIndex = totalBufferIndex + tempB.length;
+                            break;
+                        case 0x105:
+                            sendH264Status.append("o");
+                            break;
+                    }
+
                 }
             };
         }
 
         //init thread
         if (mSendH264Run == null){
-            mSendH264Run =new sendH264Thread(mUIHandler);
+            mSendH264Run =new sendH264Thread(mUIHandler, this);
         }
         mSendH264TH = new Thread(mSendH264Run);
         mSendH264TH.start();
@@ -1497,9 +1523,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
     }
     public void toggleH264(View v){
-
-
-
         //send
         Message m = new Message();
         m.what = 0x1;
@@ -1525,30 +1548,30 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
     //load jni lib
-    static {
-        System.loadLibrary("sendh264");
-    }
+//    static {
+//        System.loadLibrary("sendh264");
+//    }
     //send h264 file
-    public native void sendH264Func(String filePath);
+//    public native void sendH264Func(String filePath);
 
     //-----------------------------RTP
-    private RtpPacket mRtpSendPacket = null;
-    private RtpSocket mRtpSendSocket = null;
-    private byte[] socketSendBuffer = new byte[65536];
-    public void initRtpPacketAndSocket(){
-        //packet
-        mRtpSendPacket = new RtpPacket(socketSendBuffer, 0);
-        //socket
-//        try {
-//            //rtp_socket = new RtpSocket(new SipdroidSocket(20000)); //初始化套接字，20000为接收端口号
-//            mRtpSendSocket = new RtpSocket(new SipdroidSocket(19888), InetAddress.getByName(remote_ip), remote_port);
-//        } catch (SocketException e) {
-//            e.printStackTrace();
-//        } catch (UnknownHostException e) {
-//            e.printStackTrace();
-//        }
-//        mRtpSendPacket = new
-    }
+//    private RtpPacket mRtpSendPacket = null;
+//    private RtpSocket mRtpSendSocket = null;
+//    private byte[] socketSendBuffer = new byte[65536];
+//    public void initRtpPacketAndSocket(){
+//        //packet
+//        mRtpSendPacket = new RtpPacket(socketSendBuffer, 0);
+//        //socket
+////        try {
+////            //rtp_socket = new RtpSocket(new SipdroidSocket(20000)); //初始化套接字，20000为接收端口号
+////            mRtpSendSocket = new RtpSocket(new SipdroidSocket(19888), InetAddress.getByName(remote_ip), remote_port);
+////        } catch (SocketException e) {
+////            e.printStackTrace();
+////        } catch (UnknownHostException e) {
+////            e.printStackTrace();
+////        }
+////        mRtpSendPacket = new
+//    }
 
 
     class videoCodecRun implements Runnable{
@@ -1617,90 +1640,12 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         }
     }
 
-    class SendH264Run implements Runnable{
-        @Override
-        public void run() {
-            //
-            while (isSendingH264){
-//                sendH264Data();
-            }
-        }
-        public void sendH264Data(){
-//            try{
-//                int len = -1;
-//                byte temp;
-//                int cnt = 0 ;
-//                boolean isGetStartCode = false;
-//                boolean tempNaluStartCode = false;
-//                boolean preNaluStartCode = false;
-//                byte[] startCode = new byte[4];
-//                startCode[0] = 0x0;
-//                startCode[1] = 0x0;
-//                startCode[2] = 0x0;
-//                startCode[3] = 0x1;
-//                byte[] b =new byte[4];
-//                while(mInStrH264.read(b)!=-1){
-//                while((len = mInStrH264.read())!=-1){
-//                    if (len == 0x0){
-//                        if ((len = mInStrH264.read()) == 0x0){
-//                            if ((len = mInStrH264.read()) == 0x0){
-//                                if ((len = mInStrH264.read()) == 0x1)
-//                                //4 bytes
-//                                {
-//                                    //get start code
-//                                }
-//                            }else if(len == -1)
-//                            //3 bytes
-//                            {
-//                                // get start code
-//
-//                            }
-//                        }
-//                    }
-//                    RandomAccessFile
 
-//                    String s1 = Arrays.toString(startCode);
-//                    String s2 = Arrays.toString(b);
-//                    if (s1.equals(s2)){
-////                        isGetStartCode = true;
-//                        tempNaluStartCode = true;
-//                        preNaluStartCode = false;
-//                    }
-//                    else//not start code
-//                    {
-//                        if (tempNaluStartCode == false){
-//                            //not get first nalu
-//                            continue;
-//                        }else{
-//                            //temp nalu get
-//
-//                        }
-//
-//                    }
-
-//                }
-//                while((len = mInStrH264.read())!=-1){
-//                    //have not got the start code
-//                    if (len == 0x0 && cnt<2 && !isGetStartCode){
-//                        cnt ++;
-//                        continue;
-//                    }else if (len == 0x01 && cnt == 2){
-//                        isGetStartCode = true;
-//                    }
-//
-//                    if (isGetStartCode){
-//
-//                    }
-//                }
-//            mInStrH264
-//            }catch (IOException e){}
-        }
-    }
 //---------------------------------------------------------------recv h264
     private RecvH264Run mRecvH264Run = null;
     private Thread mRecvH264Thread = null;
     public void initRecvH264TH(){
-        mRecvH264Run = new RecvH264Run();
+        mRecvH264Run = new RecvH264Run(mUIHandler);
         mRecvH264Thread = new Thread(mRecvH264Run);
         mRecvH264Thread.start();
     }
@@ -1794,6 +1739,12 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private RandomAccessFile raf = null;
     private byte[] h264Bytes;
 
+    public byte[] getTotalBuffer() {
+        return totalBuffer;
+    }
+    public int totalBufferIndex =0;
+    public byte[] totalBuffer = new byte[5000000];
+
     private class decodeH264Thread implements Runnable{
         @Override
         public void run() {
@@ -1830,24 +1781,44 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             byte[] marker0 = new byte[]{0, 0, 0, 1};
             byte[] dummyFrame = new byte[]{0x00, 0x00, 0x01, 0x20};
             byte[] streamBuffer = null;
-            try {
-                streamBuffer = getBytes(mPlayInputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                streamBuffer = getBytes(mPlayInputStream);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+
+            //file inpout stream change into buffer
+//            streamBuffer = getTotalBuffer();
+
+
+
             int bytes_cnt = 0;
             while (mStopFlag == false){
+                //file inpout stream change into buffer
+                streamBuffer = getTotalBuffer();
+
+//                Message m = new Message();
+//                m.what = 0x105;
+//                mUIHandler.sendMessage(m);//debug
+//                mUIHandler.sendEmptyMessage(0);
+
                 bytes_cnt = streamBuffer.length;
+//                bytes_cnt = totalBufferIndex;
                 if (bytes_cnt == 0) {
                     streamBuffer = dummyFrame;
                 }
-
                 int startIndex = 0;
                 int remaining = bytes_cnt;
                 while (true){
+
+                    //debug
+//                    remaining = totalBufferIndex;
+//                    streamBuffer = getTotalBuffer();
+
                     if (remaining == 0 || startIndex >= remaining) {
                         break;
                     }
+
                     int nextFrameStart = KMPMatch(marker0, streamBuffer, startIndex + 2, remaining);
                     if (nextFrameStart == -1) {
                         nextFrameStart = remaining;
@@ -1864,15 +1835,12 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                         mPlayCodec.queueInputBuffer(inIndex, 0, nextFrameStart - startIndex, 0, 0);
                         startIndex = nextFrameStart;
                     } else {
-//                        Log.e(TAG, "aaaaa");
                         continue;
                     }
-
                     //test
-                    try{
-                        Thread.sleep(500);//500ms
-                    }catch (InterruptedException e){}
-
+//                    try{
+//                        Thread.sleep(1);//500ms
+//                    }catch (InterruptedException e){}
                     int outIndex = mPlayCodec.dequeueOutputBuffer(info, timeoutUs);
                     if (outIndex >= 0) {
                         //帧控制是不在这种情况下工作，因为没有PTS H264是可用的
@@ -1926,9 +1894,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
         int[] lsp = computeLspTable(pattern);
-
         int j = 0;  // Number of chars matched in pattern
         for (int i = start; i < remain; i++) {
             while (j > 0 && bytes[i] != pattern[j]) {

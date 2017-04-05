@@ -57,16 +57,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         setTagsForButtons();
 
-        initTVs();
+        
 
-        createATestTxtFile();
+
+//        initTVs();
+
+//        createATestTxtFile();
 
         //显示所有的文件
-        String[] files = fileList();
-        String f;
-        for (int i=0;i<files.length;i++){
-            fileListTV.append(files[i]+'\n');
-        }
+//        String[] files = fileList();
+//        String f;
+//        for (int i=0;i<files.length;i++){
+//            fileListTV.append(files[i]+'\n');
+//        }
 
 
         //ui thread handle message

@@ -1,5 +1,6 @@
 package com.example.deonew.car.Video;
 
+import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -21,13 +22,15 @@ public class sendH264Thread implements Runnable{
     public Handler mRecUIHandler = null;
     //handler to send message to ui thread
     Handler msendUIHandler = null;
+    private Activity mVideoAC = null;
 
     private Socket mSendSocket = null;//
     private OutputStream sendOs = null;//write output data to server
     //get the ui thread handler
     private FileOutputStream fos=null;//write data to local file
 
-    public sendH264Thread(Handler h){
+    public sendH264Thread(Handler h,Activity ac){
+        this.mVideoAC = ac;
         this.msendUIHandler = h;
     }
     @Override
@@ -54,7 +57,7 @@ public class sendH264Thread implements Runnable{
                         sendToUIHandler(s.length()+"");
 //                        sendToUIHandler("send file");
                         break;
-                    case 0x2://recv file
+                    case 0x2:
                         receiveFile();
                         sendToUIHandler("recv file");
                         break;
@@ -63,26 +66,26 @@ public class sendH264Thread implements Runnable{
         };
         Looper.loop();
 
-
-        File outf = new File("/storage/emulated/0/carTempRecvvvv.264");
-        try{
-            fos = new FileOutputStream(outf);
-        }catch (IOException e){}
-        //read
-        int size  = 0;
-        byte[] recBuff = new byte[1024];
-        //rec
-        while(true){
-            try {
-                //works
-                while((size = mRecvInputSream.read(recBuff))!=-1){
-                    fos.write(recBuff,0,size);
-                    fos.flush();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//
+//        File outf = new File("/storage/emulated/0/carTempRecvvvv.264");
+//        try{
+//            fos = new FileOutputStream(outf);
+//        }catch (IOException e){}
+//        //read
+//        int size  = 0;
+//        byte[] recBuff = new byte[1024];
+//        //rec
+//        while(true){
+//            try {
+//                //works
+//                while((size = mRecvInputSream.read(recBuff))!=-1){
+//                    fos.write(recBuff,0,size);
+//                    fos.flush();
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
     }
     private InputStream mRecvInputSream=null;
@@ -90,30 +93,6 @@ public class sendH264Thread implements Runnable{
         return mRecvInputSream;
     }
 
-    public void receiveFile(){
-        try {
-            // Socket socket = new Socket("10.8.191.213",20000);
-            Socket socket = new Socket(" 10.105.36.224",20000);
-            //works
-             File outf = new File("/storage/emulated/0/carTempRecv.264");
-//            File outf = new File("./carTempRecv.264");
-            FileOutputStream fos = new FileOutputStream(outf);
-            //ins: read data from client
-            mRecvInputSream = socket.getInputStream();
-
-
-            //read
-            int size  = 0;
-            byte[] recBuff = new byte[1024];
-            while((size = mRecvInputSream.read(recBuff))!=-1){
-                fos.write(recBuff,0,size);
-                fos.flush();
-            }
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     //send carTemp.h264 to server
     public void sendFile(byte[] b){
@@ -154,6 +133,62 @@ public class sendH264Thread implements Runnable{
 //            }
 //            sendToUIHandler("send success");
 //            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void receiveFile(){
+//        try {
+//            // Socket socket = new Socket("10.8.191.213",20000);
+//            Socket socket = new Socket(" 10.105.36.224",20000);
+//            //works
+//            File outf = new File("/storage/emulated/0/carTempRecv.264");
+////            File outf = new File("./carTempRecv.264");
+//            FileOutputStream fos = new FileOutputStream(outf);
+//            //ins: read data from client
+//            mRecvInputSream = socket.getInputStream();
+//            //read
+//            int size  = 0;
+//            byte[] recBuff = new byte[1024];
+//            while((size = mRecvInputSream.read(recBuff))!=-1){
+//                fos.write(recBuff,0,size);
+//                fos.flush();
+//                //send data to ui thread
+//
+//            }
+//            socket.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        try {
+            // Socket socket = new Socket("10.8.191.213",20000);
+            Socket socket = new Socket("10.105.36.224",20000);
+            //works
+            // File outf = new File("/storage/emulated/0/carTempRecv.264");
+            File outf = new File("/storage/emulated/0/carTempRecv.264");
+            FileOutputStream fos = new FileOutputStream(outf);
+            //ins: read data from client
+            InputStream ins = socket.getInputStream();
+            //read
+            int size  = 0;
+            byte[] recBuff = new byte[1024];
+            while((size = ins.read(recBuff))!=-1){
+//                fos.write(recBuff,0,size);
+//                fos.flush();
+
+                //
+//                mVideoAC.getTotalBuffer();
+                Message m = new Message();
+                m.what = 0x3;
+                m.obj = recBuff;
+                msendUIHandler.sendMessage(m);
+
+
+
+            }
+            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
