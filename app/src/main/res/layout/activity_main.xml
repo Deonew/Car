@@ -1,110 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_main"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.example.deonew.car.MainActivity">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:id="@+id/activity_main">
 
-    <TableLayout
-        android:layout_width="wrap_content"
+    <!--<LinearLayout-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content">-->
+        <!--&lt;!&ndash;<Button&ndash;&gt;-->
+            <!--&lt;!&ndash;android:text="to video ac"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:layout_width="wrap_content"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:layout_height="wrap_content"&ndash;&gt;-->
+            <!--&lt;!&ndash;android:id="@+id/toVideoAC" />&ndash;&gt;-->
+    <!--</LinearLayout>-->
+
+
+    <!--<LinearLayout-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content">-->
+    <android.support.design.widget.TabLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/mainTabLayout">
-    </TableLayout>
+        android:id="@+id/mainTabLayout"
+        app:tabGravity="fill"
+        app:tabMode="fixed">
+    </android.support.design.widget.TabLayout>
+
     <android.support.v4.view.ViewPager
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/mainViewPager">
     </android.support.v4.view.ViewPager>
 
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="!"
-        android:id="@+id/showTest" />
-
-    <Button
-        android:text="uni"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/showTest"
-        android:layout_toRightOf="@+id/showTest"
-        android:layout_toEndOf="@+id/showTest"
-        android:layout_marginLeft="45dp"
-        android:layout_marginStart="45dp"
-        android:layout_marginTop="47dp"
-        android:id="@+id/uni" />
-
-    <Button
-        android:text="multi"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/uni"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="56dp"
-        android:id="@+id/multi" />
-
-    <Button
-        android:text="broad"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/multi"
-        android:layout_alignLeft="@+id/multi"
-        android:layout_alignStart="@+id/multi"
-        android:layout_marginTop="65dp"
-        android:id="@+id/broad" />
-
-    <TextView
-        android:text=""
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginRight="17dp"
-        android:layout_marginEnd="17dp"
-        android:id="@+id/fileListTextView" />
+</LinearLayout>
 
 
-    <Button
-        android:text="arStart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/uni"
-        android:layout_toLeftOf="@+id/fileListTextView"
-        android:layout_toStartOf="@+id/fileListTextView"
-        android:layout_marginTop="13dp"
-        android:id="@+id/arStart" />
 
-    <Button
-        android:text="arStop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/arStart"
-        android:layout_alignLeft="@+id/arStart"
-        android:layout_alignStart="@+id/arStart"
-        android:layout_marginTop="11dp"
-        android:id="@+id/arStop" />
 
-    <Button
-        android:text="to video ac"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/toVideoAC" />
+    <!--</LinearLayout>-->
 
-    <Button
-        android:text="to audio ac"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_toRightOf="@+id/uni"
-        android:layout_toEndOf="@+id/uni"
-        android:layout_marginBottom="25dp"
-        android:id="@+id/toAudioAC" />
+    <!--<TextView-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="!"-->
+        <!--android:id="@+id/showTest" />-->
 
-</RelativeLayout>
+    <!--<Button-->
+        <!--android:text="uni"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@+id/showTest"-->
+        <!--android:layout_toRightOf="@+id/showTest"-->
+        <!--android:layout_toEndOf="@+id/showTest"-->
+        <!--android:layout_marginLeft="45dp"-->
+        <!--android:layout_marginStart="45dp"-->
+        <!--android:layout_marginTop="47dp"-->
+        <!--android:id="@+id/uni" />-->
+
+    <!--<Button-->
+        <!--android:text="multi"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@+id/uni"-->
+        <!--android:layout_centerHorizontal="true"-->
+        <!--android:layout_marginTop="56dp"-->
+        <!--android:id="@+id/multi" />-->
+
+    <!--<Button-->
+        <!--android:text="broad"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@+id/multi"-->
+        <!--android:layout_alignLeft="@+id/multi"-->
+        <!--android:layout_alignStart="@+id/multi"-->
+        <!--android:layout_marginTop="65dp"-->
+        <!--android:id="@+id/broad" />-->
+
+    <!--<TextView-->
+        <!--android:text=""-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentTop="true"-->
+        <!--android:layout_alignParentRight="true"-->
+        <!--android:layout_alignParentEnd="true"-->
+        <!--android:layout_marginRight="17dp"-->
+        <!--android:layout_marginEnd="17dp"-->
+        <!--android:id="@+id/fileListTextView" />-->
+
+
+    <!--<Button-->
+        <!--android:text="arStart"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignTop="@+id/uni"-->
+        <!--android:layout_toLeftOf="@+id/fileListTextView"-->
+        <!--android:layout_toStartOf="@+id/fileListTextView"-->
+        <!--android:layout_marginTop="13dp"-->
+        <!--android:id="@+id/arStart" />-->
+
+    <!--<Button-->
+        <!--android:text="arStop"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@+id/arStart"-->
+        <!--android:layout_alignLeft="@+id/arStart"-->
+        <!--android:layout_alignStart="@+id/arStart"-->
+        <!--android:layout_marginTop="11dp"-->
+        <!--android:id="@+id/arStop" />-->
+
+
+    <!--<Button-->
+        <!--android:text="to audio ac"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentBottom="true"-->
+        <!--android:layout_toRightOf="@+id/uni"-->
+        <!--android:layout_toEndOf="@+id/uni"-->
+        <!--android:layout_marginBottom="25dp"-->
+        <!--android:id="@+id/toAudioAC" />-->
+
+

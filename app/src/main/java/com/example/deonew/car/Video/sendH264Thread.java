@@ -164,29 +164,28 @@ public class sendH264Thread implements Runnable{
 //        }
         try {
             // Socket socket = new Socket("10.8.191.213",20000);
-            Socket socket = new Socket("10.105.36.224",20000);
+            Socket socket = new Socket("10.105.39.47",20000);
             //works
             // File outf = new File("/storage/emulated/0/carTempRecv.264");
-            File outf = new File("/storage/emulated/0/carTempRecv.264");
+            File outf = new File("/storage/emulated/0/carTempRecv1.264");
             FileOutputStream fos = new FileOutputStream(outf);
             //ins: read data from client
             InputStream ins = socket.getInputStream();
             //read
             int size  = 0;
-            byte[] recBuff = new byte[1024];
+//            byte[] recBuff = new byte[3072];
+            byte[] recBuff = new byte[2600];
             while((size = ins.read(recBuff))!=-1){
+                //write to file
 //                fos.write(recBuff,0,size);
 //                fos.flush();
 
-                //
-//                mVideoAC.getTotalBuffer();
+
+                //send data to mainhandler
                 Message m = new Message();
                 m.what = 0x3;
                 m.obj = recBuff;
                 msendUIHandler.sendMessage(m);
-
-
-
             }
             socket.close();
         } catch (IOException e) {

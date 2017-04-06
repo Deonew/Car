@@ -11,6 +11,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -30,7 +32,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -55,9 +59,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
 
-        setTagsForButtons();
+//        setTagsForButtons();
 
-        
+
+        //tablayout
+        TabLayout mainTabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
+        //set title
+        List<String> titleList = new ArrayList<>();
+        titleList.add("Text");
+        titleList.add("Audio");
+        titleList.add("Video");
+
+        //add tab according to title
+        mainTabLayout.addTab(mainTabLayout.newTab().setText(titleList.get(0)));
+        mainTabLayout.addTab(mainTabLayout.newTab().setText(titleList.get(1)));
+        mainTabLayout.addTab(mainTabLayout.newTab().setText(titleList.get(2)));
+
+        //new adapter
+        MainViewPagerAdapter mainViewPagerAdapter = new MainViewPagerAdapter(getSupportFragmentManager(),this);
+        //view pager and adapter
+        ViewPager viewPager = (ViewPager) findViewById(R.id.mainViewPager);
+        viewPager.setAdapter(mainViewPagerAdapter);
+
+        //set default page
+        viewPager.setCurrentItem(1);
+
+        //tablayout and viewpaer
+        mainTabLayout.setupWithViewPager(viewPager);
+
+
+        //fill in width
+        mainTabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+        mainTabLayout.setTabMode(TabLayout.MODE_FIXED);
+
+
+
+
+
 
 
 //        initTVs();
@@ -86,45 +124,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /*
     * init textviews
     */
-    public void initTVs(){
-        fileListTV = (TextView) this.findViewById(R.id.fileListTextView);
-        testView = (TextView) this.findViewById(R.id.showTest);
-        testView.append("\nnihaoa");
-    }
+//    public void initTVs(){
+//        fileListTV = (TextView) this.findViewById(R.id.fileListTextView);
+//        testView = (TextView) this.findViewById(R.id.showTest);
+//        testView.append("\nnihaoa");
+//    }
     /*
     *func: set tags for buttons
     *
     */
     private void setTagsForButtons(){
-        btnUni = (Button)this.findViewById(R.id.uni);
-        btnUni.setOnClickListener(this);
-        btnUni.setTag("uni");
-
-        btnUni = (Button)this.findViewById(R.id.multi);
-        btnUni.setOnClickListener(this);
-        btnUni.setTag("multi");
-
-        btnUni = (Button)this.findViewById(R.id.broad);
-        btnUni.setOnClickListener(this);
-        btnUni.setTag("broad");
-
-        //-----control audio
-        btnArStart = (Button)this.findViewById(R.id.arStart);
-        btnArStart.setOnClickListener(this);
-        btnArStart.setTag("arStart");
-        btnArStop = (Button)this.findViewById(R.id.arStop);
-        btnArStop.setOnClickListener(this);
-        btnArStop.setTag("arStop");
+//        btnUni = (Button)this.findViewById(R.id.uni);
+//        btnUni.setOnClickListener(this);
+//        btnUni.setTag("uni");
+//
+//        btnUni = (Button)this.findViewById(R.id.multi);
+//        btnUni.setOnClickListener(this);
+//        btnUni.setTag("multi");
+//
+//        btnUni = (Button)this.findViewById(R.id.broad);
+//        btnUni.setOnClickListener(this);
+//        btnUni.setTag("broad");
+//
+//        //-----control audio
+//        btnArStart = (Button)this.findViewById(R.id.arStart);
+//        btnArStart.setOnClickListener(this);
+//        btnArStart.setTag("arStart");
+//        btnArStop = (Button)this.findViewById(R.id.arStop);
+//        btnArStop.setOnClickListener(this);
+//        btnArStop.setTag("arStop");
 
         //
-        Button btnToAudio = (Button)this.findViewById(R.id.toAudioAC);
-        btnToAudio.setOnClickListener(this);
-        btnToAudio.setTag("toAudioAC");
+//        Button btnToAudio = (Button)this.findViewById(R.id.toAudioAC);
+//        btnToAudio.setOnClickListener(this);
+//        btnToAudio.setTag("toAudioAC");
 
         //---to video
-        Button btnToVideo = (Button)this.findViewById(R.id.toVideoAC);
-        btnToVideo.setOnClickListener(this);
-        btnToVideo.setTag("toVideoAC");
+//        Button btnToVideo = (Button)this.findViewById(R.id.toVideoAC);
+//        btnToVideo.setOnClickListener(this);
+//        btnToVideo.setTag("toVideoAC");
 
 
     }
@@ -163,12 +201,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         testView.append(s);
     }
     //------
-    public void sendMsgToTipTV(String s){
-        Message msg = new Message();
-//                msg.what =
-        msg.obj = s ;
-        mUiHandler.sendMessage(msg);
-    }
+//    public void sendMsgToTipTV(String s){
+//        Message msg = new Message();
+////                msg.what =
+//        msg.obj = s ;
+//        mUiHandler.sendMessage(msg);
+//    }
 
     /*
     * send unicast command to server(obu)

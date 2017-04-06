@@ -10,25 +10,28 @@ import android.support.v4.app.FragmentPagerAdapter;
  */
 
 public class MainViewPagerAdapter extends FragmentPagerAdapter {
-    private String titles[] = new String[]{"Text","Audio"};
+    private String titles[] = new String[]{"Text","Audio","Video"};
     public MainViewPagerAdapter(FragmentManager fm, Context context){
         super(fm);
     }
     @Override
     public int getCount() {
-        return 2;
+        return titles.length;
     }
 
     @Override
     public Fragment getItem(int position) {
         switch (position){
+            case 0:
+                return TextFragment.newInstance(0);
             case 1:
-                return TextFragment.newInstance(0);
+                return AudioFragment.newInstance(0);
             case 2:
+                return VideoFragment.newInstance(0);
+            default:
                 return TextFragment.newInstance(0);
-
         }
-        return TextFragment.newInstance(0);
+
     }
 
 

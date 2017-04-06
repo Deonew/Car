@@ -111,7 +111,7 @@
     <SurfaceView
         android:id="@+id/preview"
         android:layout_width="wrap_content"
-        android:layout_height="300px" />
+        android:layout_height="1080px" />
 
     <SurfaceView
         android:id="@+id/surface_view_camera2_activity"

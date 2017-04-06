@@ -59,6 +59,8 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Created by deonew on 17-3-10.
@@ -1496,13 +1498,19 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                         case 0x3:
                             //write into total buffer
                             byte[] tempB = (byte[])msg.obj;
-                            getTotalBuffer();
-                            System.arraycopy(tempB,0,getTotalBuffer(),totalBufferIndex,tempB.length);
+//                            getTotalBuffer();
+//                            System.arraycopy(tempB,0,getTotalBuffer(),totalBufferIndex,tempB.length);
+                            writeIntoTotalBuffer(tempB);
+
                             //tempB.length should be changed
                             totalBufferIndex = totalBufferIndex + tempB.length;
+
                             break;
                         case 0x105:
                             sendH264Status.append("o");
+                        case 0x106:
+//                            sendH264Status.setText("");
+                            sendH264Status.append("i");
                             break;
                     }
 
@@ -1520,6 +1528,31 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 //        mSendH264Run.mRecUIHandler.sendMessage(m);
 //        mH264Handler = new Handler(){}
+
+    }
+    private int lastend = 0;//offset: last byte
+    /*
+    *
+    *toWriteBuffer:
+    */
+    public void writeIntoTotalBuffer(byte[] toWriteBuffer){
+        if (lastend + toWriteBuffer.length < totalBuffer.length){
+            //directly copy
+            System.arraycopy(toWriteBuffer,0,getTotalBuffer(),lastend,toWriteBuffer.length);
+            lastend = lastend + toWriteBuffer.length;
+        }else{
+            //previous part
+            int preLen = totalBuffer.length - lastend;
+            System.arraycopy(toWriteBuffer,0,getTotalBuffer(),lastend,preLen);
+
+            //later part
+            //start at the beginning
+            int laterLen = toWriteBuffer.length - preLen;
+            System.arraycopy(toWriteBuffer,preLen,getTotalBuffer(),0,laterLen);
+
+            //handle lastend
+            lastend = laterLen;
+        }
 
     }
     public void toggleH264(View v){
@@ -1723,6 +1756,18 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
             }
         });
+
+
+        //test
+        File f = new File(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
+        try {
+            mPlayInputStream = new DataInputStream(new FileInputStream(f));
+        } catch (FileNotFoundException e) {e.printStackTrace();}
+
+        //test function getCodecData
+//        try{
+//            testBytes = getBytes(mPlayInputStream);
+//        }catch (IOException e){}
     }
 
     private void startDecodingThread() {
@@ -1742,35 +1787,25 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     public byte[] getTotalBuffer() {
         return totalBuffer;
     }
+    //test
+    public byte[] testBytes = new byte[10000000];
+    public byte[] getTestBytes(){
+        return testBytes;
+    }
     public int totalBufferIndex =0;
-    public byte[] totalBuffer = new byte[5000000];
+    private byte[] totalBuffer = new byte[10000000];
 
+    public byte[] streamBuffer = null;
     private class decodeH264Thread implements Runnable{
         @Override
         public void run() {
 //            while(isPlayH264){
             try {
                 decodeLoop();
+//                decodeLoop1();
             } catch (Exception e) {
             }
-//            }
-
-//            //init random
-//            try{
-//                raf = new RandomAccessFile(recvCarTempH264Path,"rws");
-//            }catch(FileNotFoundException e){}
-//
-//            while (true){
-//                try{
-//                    raf.seek(h264RecvReadIndex);
-//                    raf.read();
-//                }catch(IOException e){}
-//            }
-
-
         }
-        //标记 camera旧api 已改
-
         private void decodeLoop(){
             //存放目标文件的数据
 //            ByteBuffer[] inputBuffers = mPlayCodec.getInputBuffers();
@@ -1780,22 +1815,20 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             long timeoutUs = 10000;
             byte[] marker0 = new byte[]{0, 0, 0, 1};
             byte[] dummyFrame = new byte[]{0x00, 0x00, 0x01, 0x20};
-            byte[] streamBuffer = null;
-//            try {
-//                streamBuffer = getBytes(mPlayInputStream);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+//            streamBuffer = null;
+            try {
+                streamBuffer = getBytes(mPlayInputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             //file inpout stream change into buffer
 //            streamBuffer = getTotalBuffer();
 
-
-
             int bytes_cnt = 0;
             while (mStopFlag == false){
                 //file inpout stream change into buffer
-                streamBuffer = getTotalBuffer();
+                streamBuffer = getTotalBuffer().clone();
 
 //                Message m = new Message();
 //                m.what = 0x105;
@@ -1803,36 +1836,72 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //                mUIHandler.sendEmptyMessage(0);
 
                 bytes_cnt = streamBuffer.length;
+                //test
+//                bytes_cnt = lastend;
 //                bytes_cnt = totalBufferIndex;
+//                bytes_cnt = 10000000;//works
+
                 if (bytes_cnt == 0) {
                     streamBuffer = dummyFrame;
                 }
+
                 int startIndex = 0;
                 int remaining = bytes_cnt;
+
+
+                int lastCopy = 0;
                 while (true){
 
                     //debug
 //                    remaining = totalBufferIndex;
-//                    streamBuffer = getTotalBuffer();
+                    streamBuffer = getTotalBuffer().clone();
+                    remaining = streamBuffer.length;
+
+//                    System.arraycopy(getTotalBuffer(),lastCopy,streamBuffer,lastCopy,totalBufferIndex);
+//                    lastCopy = totalBufferIndex;
+//                    remaining = totalBufferIndex;
+
+                    //
+
+                    //test
+                    //get data
+//                    byte[] b = getCodecPutData();
 
                     if (remaining == 0 || startIndex >= remaining) {
                         break;
                     }
 
-                    int nextFrameStart = KMPMatch(marker0, streamBuffer, startIndex + 2, remaining);
+                    //origin
+                    int nextFrameStart = KMPMatch(marker0, streamBuffer, startIndex+ 2, remaining);
+//                    int nextFrameStart = KMPMatch(marker0, totalBuffer, lastFrameEnd, lastend);
+                    //
                     if (nextFrameStart == -1) {
                         nextFrameStart = remaining;
                     } else {
                         //此处没写，标记一下
                     }
+
                     int inIndex = mPlayCodec.dequeueInputBuffer(timeoutUs);
                     if (inIndex >= 0) {
                         ByteBuffer byteBuffer = mPlayCodec.getInputBuffer(inIndex);
 //                        ByteBuffer byteBuffer = inputBuffers[inIndex];
                         byteBuffer.clear();
+
+                        //get data from file stream
+                        //works
                         byteBuffer.put(streamBuffer, startIndex, nextFrameStart - startIndex);
-                        //在给指定Index的inputbuffer[]填充数据后，调用这个函数把数据传给解码器
                         mPlayCodec.queueInputBuffer(inIndex, 0, nextFrameStart - startIndex, 0, 0);
+
+                        //get data from totalbuffer
+//                        byteBuffer.put(b);
+//                        mPlayCodec.queueInputBuffer(inIndex, 0, b.length, 100, 0);
+
+                        //get data from public buffer
+//                        byte[] b = getCodecPutData();
+//                        byteBuffer.put(b);
+//                        mPlayCodec.queueInputBuffer(inIndex, 0, b.length, 100, 0);
+
+
                         startIndex = nextFrameStart;
                     } else {
                         continue;
@@ -1841,6 +1910,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //                    try{
 //                        Thread.sleep(1);//500ms
 //                    }catch (InterruptedException e){}
+
                     int outIndex = mPlayCodec.dequeueOutputBuffer(info, timeoutUs);
                     if (outIndex >= 0) {
                         //帧控制是不在这种情况下工作，因为没有PTS H264是可用的
@@ -1852,17 +1922,173 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                             }
                         }
                         boolean doRender = (info.size != 0);
-                        //对outputbuffer的处理完后，调用这个函数把buffer重新返回给codec类。
                         mPlayCodec.releaseOutputBuffer(outIndex, doRender);
                     } else {
-//                        Log.e(TAG, "bbbb");
                     }
                 }
                 mStopFlag = true;
-//                mHandler.sendEmptyMessage(0);
             }
 
         }
+
+    }
+
+    private int lastFrameEnd = 0;//last time read a frame
+    private int nextFrameStart = 0;
+    private void decodeLoop1(){
+        MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+        long startMs = System.currentTimeMillis();
+        long timeoutUs = 10000;
+        byte[] marker0 = new byte[]{0, 0, 0, 1};
+        byte[] dummyFrame = new byte[]{0x00, 0x00, 0x01, 0x20};
+        byte[] streamBuffer = null;
+
+        int bytes_cnt = 0;
+        while (mStopFlag == false){
+            streamBuffer = getTotalBuffer();
+            bytes_cnt = streamBuffer.length;
+            if (bytes_cnt == 0) {
+                streamBuffer = dummyFrame;
+            }
+            int startIndex = 0;
+            int remaining = bytes_cnt;
+            while (true){
+//                if (remaining == 0 || startIndex >= remaining) {
+//                    break;
+//                }
+//                int nextFrameStart = KMPMatch(marker0, streamBuffer, startIndex + 2, remaining);
+//                if (nextFrameStart == -1) {
+//                    nextFrameStart = remaining;
+//                } else {
+//                }
+
+//                if (lastFrameEnd >= lastend){
+//                    break;
+//                }
+                if (1 == 2){
+                    break;
+                }
+
+
+
+                //get byte[] to put
+                byte[] toPut = getCodecPutData();
+
+                int inIndex = mPlayCodec.dequeueInputBuffer(timeoutUs);
+                if (inIndex >= 0) {
+                    ByteBuffer byteBuffer = mPlayCodec.getInputBuffer(inIndex);
+                    byteBuffer.clear();
+                    byteBuffer.put(toPut);
+                    mPlayCodec.queueInputBuffer(inIndex, 0,toPut.length, 0, 0);
+                    startIndex = nextFrameStart;
+                } else {
+                    continue;
+                }
+                int outIndex = mPlayCodec.dequeueOutputBuffer(info, timeoutUs);
+                if (outIndex >= 0) {
+                    while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - startMs) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    boolean doRender = (info.size != 0);
+                    mPlayCodec.releaseOutputBuffer(outIndex, doRender);
+                } else {
+                }
+            }
+            mStopFlag = true;
+        }
+    }
+
+    public byte[] getCodecPutData(){
+//        byte[] tempFrame = null;
+
+        //generate lsp
+        byte[] pattern = new byte[]{0, 0, 0, 1};//nalu head
+        int[] lsp = new int[pattern.length];
+        lsp[0] = 0;  // Base case
+        for (int i = 1; i < pattern.length; i++) {
+            // Start by assuming we're extending the previous LSP
+            int j = lsp[i - 1];
+            while (j > 0 && pattern[i] != pattern[j])
+                j = lsp[j - 1];
+            if (pattern[i] == pattern[j])
+                j++;
+            lsp[i] = j;
+        }
+
+        //get next frame offset
+//        nextFrameStart = lastFrameEnd;
+        int tempOffset = lastFrameEnd;
+        boolean isGetFrame = false;
+        int patternIndex = 0;
+        boolean isParted = false;//
+        int preLength = 0;
+        int laterLength = 0;
+        while(!isGetFrame){
+            //if read end
+            if (tempOffset >= streamBuffer.length){
+                //
+                preLength = tempOffset - lastFrameEnd;
+                tempOffset = 0;
+            }
+
+            while (patternIndex > 0 && streamBuffer[tempOffset] != pattern[patternIndex]) {
+                patternIndex = lsp[patternIndex - 1];  // Strictly decreasing
+            }
+            if (streamBuffer[tempOffset] == pattern[patternIndex]) {
+                patternIndex++;
+                if (patternIndex == pattern.length)
+                    break;
+            }
+            tempOffset++;
+        }
+        //get later length if parted
+        if (isParted){
+            laterLength = tempOffset;
+        }else{
+            laterLength = tempOffset - lastFrameEnd;
+        }
+
+        //get temp frame data
+        byte[] tempFrame = new byte[preLength + laterLength];
+        if (isParted){
+            //get pre-part
+            System.arraycopy(streamBuffer,lastFrameEnd,tempFrame,0,preLength);
+            //get later part
+            System.arraycopy(streamBuffer,0,tempFrame,preLength,laterLength);
+        }else{
+            //directly get later
+            System.arraycopy(streamBuffer,lastFrameEnd,tempFrame,0,laterLength);
+        }
+
+        //change lastFrameEnd at last
+        lastFrameEnd = tempOffset;
+
+        //
+        Message m = new Message();
+        m.what = 0x106;
+        m.obj = lsp;
+        mUIHandler.sendMessage(m);
+
+        return tempFrame;
+//        int j = 0;  // Number of chars matched in pattern
+//        for (int i = lastFrameEnd; i < remain; i++) {
+//            while (j > 0 && bytes[i] != pattern[j]) {
+//                // Fall back in the pattern
+//                j = lsp[j - 1];  // Strictly decreasing
+//            }
+//            if (bytes[i] == pattern[j]) {
+//                // Next char matched, increment position
+//                j++;
+//                if (j == pattern.length)
+//                    return i - (j - 1);
+//            }
+//        }
+//        return -1;
+
 
     }
 
@@ -1883,14 +2109,14 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 bos.write(buf, 0, len);
             buf = bos.toByteArray();
         }
-//        Log.e("----------", "bbbb");
-//        videoStatus
         return buf;
     }
 
+    //march nalu head
     private int KMPMatch(byte[] pattern, byte[] bytes, int start, int remain) {
         try {
-            Thread.sleep(30);
+            Thread.sleep(30);//works
+//            Thread.sleep(5);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -1911,6 +2137,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         return -1;  // Not found
     }
 
+    //
+    private int p = 0;
     private int[] computeLspTable(byte[] pattern) {
         int[] lsp = new int[pattern.length];
         lsp[0] = 0;  // Base case
@@ -1922,6 +2150,12 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             if (pattern[i] == pattern[j])
                 j++;
             lsp[i] = j;
+        }
+        //
+        if (p == 0){
+            Message m = new Message();
+            m.obj = lsp;
+            mUIHandler.sendMessage(m);
         }
         return lsp;
     }
