@@ -1553,8 +1553,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             //handle lastend
             lastend = laterLen;
         }
-
     }
+
     public void toggleH264(View v){
         //send
         Message m = new Message();
@@ -1566,6 +1566,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
     }
+
     public void recvH264(View v){
         //send recv message
         Message m = new Message();

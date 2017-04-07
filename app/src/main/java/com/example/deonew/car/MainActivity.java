@@ -97,7 +97,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-
 //        initTVs();
 
 //        createATestTxtFile();
@@ -121,6 +120,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         };
     }
 
+
+    public void sendText(){
+
+    }
     /*
     * init textviews
     */

@@ -5,6 +5,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
+import com.example.deonew.car.Text.TextFragment;
+
 /**
  * Created by deonew on 17-4-4.
  */

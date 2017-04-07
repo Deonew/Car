@@ -3,10 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <!--<TextView-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="text" />-->
 
     <EditText
         android:layout_width="match_parent"
@@ -14,6 +10,29 @@
         android:id="@+id/sendTextInput"
         android:text="nihao"/>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="send text"
+        android:id="@+id/mainSendTextBtn"/>
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="text from server:"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="300px"
+        android:text=""
+        android:id="@+id/showRecvText"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/mainRecvTextBtn"
+        android:text="receive"/>
 
     <android.support.design.widget.FloatingActionButton
         android:layout_width="wrap_content"
