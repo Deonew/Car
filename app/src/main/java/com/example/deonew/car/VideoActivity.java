@@ -125,7 +125,7 @@ public class VideoActivity extends Activity implements View.OnClickListener{
         }
     }
     private void startClick(){
-        tip.append("start...");
+        tip.append("init...");
     }
     private void stopClick(){
         tip.append("stop...");

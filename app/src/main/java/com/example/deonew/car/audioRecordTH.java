@@ -64,7 +64,7 @@ class audioRecordTH extends Thread
 
             dout=new DataOutputStream(s.getOutputStream());
 
-            //new Thread(R1).start();
+            //new Thread(R1).init();
 
         }
 
@@ -99,7 +99,7 @@ class audioRecordTH extends Thread
         try{
 
             byte[] bytes_pkg;
-            // start
+            // init
             mRecord.startRecording();
 //            while (isRecording) {
             while (true) {

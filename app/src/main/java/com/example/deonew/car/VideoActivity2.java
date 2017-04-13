@@ -42,9 +42,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.deonew.car.Rtp.RtpPacket;
-import com.example.deonew.car.Rtp.RtpSocket;
 import com.example.deonew.car.Video.RecvH264Run;
+import com.example.deonew.car.Video.SendH264;
 import com.example.deonew.car.Video.sendH264Thread;
 
 import java.io.ByteArrayInputStream;
@@ -59,8 +58,8 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by deonew on 17-3-10.
@@ -111,13 +110,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //    private int surfaceHeight = 1920;
 //    private int surfaceWidth = 1080;
 
-    //camera data sends to this surface
-    //and this surface sends to mediacodec
-    //not use
-//    private Surface mMediaCodecSurface;
 
-    //audio manager
-    private AudioRecManager mAudioRecManager;
     //audio
     private FileOutputStream audioFos;
     private String audioPath = Environment.getExternalStorageDirectory() + "/carTemp.aac";
@@ -133,7 +126,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     //used when read data
     private int miniBuffSize;
     //thread to read data from audio buffer in mAudioRec
-    private AudioRecManager.dataCatch mDataCatch;
+//    private AudioRecManager.dataCatch mDataCatch;
     private Thread mAudioDataCatchThread;
 
     //control record
@@ -158,8 +151,15 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     //audio track index
     private int mAudioTrackIndex;
 
-    //rtp packet and socket
+
+
     //
+    private SendH264 sendH264;
+
+    private BlockingQueue<byte[]> VideoSendQueue = new ArrayBlockingQueue<byte[]>(10000);
+    public BlockingQueue getVideoSendQueue(){
+        return VideoSendQueue;
+    }
 
 
 
@@ -188,11 +188,9 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         //get format
 //        StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 //        map.getOutputFormats();
-
+//----------------------------------------------------------video
+        //camera
         initView();
-
-
-
         //init video codec
         initVideoCodec();
 
@@ -210,25 +208,27 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
 
-        //video start read data
-        //not used
-        mVideoDataReadTH = new Thread(new videoCodecRun());
-        mVideoDataReadTH.start();
+        sendH264 = new SendH264(this);
 
-//        start read data
+
+        //not used
+//        mVideoDataReadTH = new Thread(new videoCodecRun());
+//        mVideoDataReadTH.init();
+
+//        init read data
 //        isVideoRec = true;
         //init audio
 //        initAudioManager();
         //
 //        mAudioRecManager.startAudioRec();
 
-        initAudioRec();
+//        initAudioRec();
 
 
 
-        initMuxer();
-        //start muxer
-//        mMuxer.start();
+//        initMuxer();
+        //init muxer
+//        mMuxer.init();
 //
 //        initNImageReader();
 
@@ -240,22 +240,49 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //        isMuxering = true;
 
 //
-        initSendH264TH();
-
-        initRecvH264TH();
+//        initSendH264TH();
+//
+//        initRecvH264TH();
 
         //
 //        init(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
 
-        initPlaySurfaceView();
+//        initPlaySurfaceView();
 
 //        mSendH264Run.mRecUIHandler.sendEmptyMessage(0);
 
 //        mSurfaceView.setVisibility(View.INVISIBLE);//debug
+
 //        init(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
 //        mPlaySurface
 
-        getIP();
+//        getIP();
+
+        //put data to queue
+//        putData();
+    }
+    public void putData(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File f = new File(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
+                DataInputStream testInput = null;
+                try {
+                    testInput = new DataInputStream(new FileInputStream(f));
+                    byte[] re = new byte[1024];
+                    while (testInput.read(re)!=-1){
+                        h264DataQueue.put(re);
+                    }
+                }
+                catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }catch (IOException e){}
+                catch (InterruptedException e){}
+
+
+
+            }
+        }).start();
     }
 
     public void getIP(){
@@ -288,7 +315,11 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //            }
 //        },null);
     }
-//--------------------------------audio
+
+
+
+
+    //--------------------------------audio
     public void initAudioRec(){
         miniBuffSize = AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat)*2;
         //init mAudioRec according to minibuff and given conf
@@ -299,6 +330,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         if (file.exists()){
             file.delete();
         }
+
         try{
             audioFos = new FileOutputStream(audioPath,true);
         }catch(FileNotFoundException e){}
@@ -316,159 +348,75 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         mAudioCodec.configure(f,null,null,MediaCodec.CONFIGURE_FLAG_ENCODE);
         mAudioCodec.start();
 
-
-
-
-
     }
     class audioDataCatch implements Runnable{
         @Override
         public void run() {
             while(isAudioRecording){
-//                readAudioData();
-                //TODO sleep 10ms
-                //ok
-                try{
-                    Thread.sleep(10);
-                }catch (InterruptedException e){}
+                readAudioData();
             }
         }
-    }
+
 
     //read raw data
     //encode the data
     //write it to a file according to the given string
     public void readAudioData() {
-        //buff contains raw data
-//        byte[] buff = new byte[miniBuffSize];
-//        mAudioRec.read(buff,0,miniBuffSize);
-
-        if (isMuxering){
-            //read raw data
-            int inputBuffIndex = mAudioCodec.dequeueInputBuffer(-1);
-            if (inputBuffIndex>=0){
-                //available input buffer
-                ByteBuffer bybu = mAudioCodec.getInputBuffer(inputBuffIndex);
-                bybu.clear();
+        //read raw data
+        int inputBuffIndex = mAudioCodec.dequeueInputBuffer(-1);
+        if (inputBuffIndex>=0){
+            //available input buffer
+            ByteBuffer bybu = mAudioCodec.getInputBuffer(inputBuffIndex);
+            bybu.clear();
 //            bybu
-                int len = mAudioRec.read(bybu,miniBuffSize);
-                //put it back
-                mAudioCodec.queueInputBuffer(inputBuffIndex,0,len, System.nanoTime()/1000,0);
+            int len = mAudioRec.read(bybu,miniBuffSize);
+            //put it back
+            mAudioCodec.queueInputBuffer(inputBuffIndex,0,len, System.nanoTime()/1000,0);
+        }
+        //get data out
+        MediaCodec.BufferInfo buInfo = new MediaCodec.BufferInfo();
+        int outputBuffIndex =mAudioCodec.dequeueOutputBuffer(buInfo,0);
+
+        if (outputBuffIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
+            //add audio track
+//            mVideoActivity2.addAudioTrack();
+        }else if(outputBuffIndex == MediaCodec.INFO_TRY_AGAIN_LATER){
+        }else{
+            while(outputBuffIndex>=0){
+                ByteBuffer bybuOut = mAudioCodec.getOutputBuffer(outputBuffIndex);
+
+                //encodedData receive data from buffer
+                byte[] encodedData = new byte[buInfo.size+7];
+                //get raw data
+                bybuOut.get(encodedData,7,buInfo.size);
+                //add adts
+                // to save as aac format
+                int profile = 2;  //AAC LC
+                int freqIdx = 4;  //44.1KHz
+                int chanCfg = 2;  //CPE
+                encodedData[0] = (byte)0xFF;
+                encodedData[1] = (byte)0xF9;
+                encodedData[2] = (byte)(((profile-1)<<6) + (freqIdx<<2) +(chanCfg>>2));
+                encodedData[3] = (byte)(((chanCfg&3)<<6) + (encodedData.length>>11));
+                encodedData[4] = (byte)((encodedData.length&0x7FF) >> 3);
+                encodedData[5] = (byte)(((encodedData.length&7)<<5) + 0x1F);
+                encodedData[6] = (byte)0xFC;
+
+                //write data
+                try{
+                    audioFos.write(encodedData,0,encodedData.length);
+                }catch (IOException e){}
+
+                //continue circle
+                mAudioCodec.releaseOutputBuffer(outputBuffIndex,false);
+                outputBuffIndex = mAudioCodec.dequeueOutputBuffer(buInfo,0);
             }
-            //get data out
-            MediaCodec.BufferInfo buInfo = new MediaCodec.BufferInfo();
-            int outputBuffIndex =mAudioCodec.dequeueOutputBuffer(buInfo,0);
-
-            if (outputBuffIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
-                //add audio track
-                mAudioFormat = mAudioCodec.getOutputFormat();
-                mAudioTrackIndex = mMuxer.addTrack(mAudioFormat);
-                if (mAudioTrackIndex>=0 && mVideoTrackIndex>=0){
-                    mMuxer.start();
-                }
-            }else if(outputBuffIndex == MediaCodec.INFO_TRY_AGAIN_LATER){
-
-            }else{
-                while(outputBuffIndex>=0){
-                    ByteBuffer bybuOut = mAudioCodec.getOutputBuffer(outputBuffIndex);
-
-                    //mux audio
-                    buInfo.presentationTimeUs = System.nanoTime() / 1000L;
-                    mMuxer.writeSampleData(mAudioTrackIndex,bybuOut,buInfo);
-
-                    //encodedData receive data from buffer
-                    byte[] encodedData = new byte[buInfo.size+7];
-                    //get raw data
-                    bybuOut.get(encodedData,7,buInfo.size);
-                    //add adts
-                    // to save as aac format
-                    int profile = 2;  //AAC LC
-                    int freqIdx = 4;  //44.1KHz
-                    int chanCfg = 2;  //CPE
-                    encodedData[0] = (byte)0xFF;
-                    encodedData[1] = (byte)0xF9;
-                    encodedData[2] = (byte)(((profile-1)<<6) + (freqIdx<<2) +(chanCfg>>2));
-                    encodedData[3] = (byte)(((chanCfg&3)<<6) + (encodedData.length>>11));
-                    encodedData[4] = (byte)((encodedData.length&0x7FF) >> 3);
-                    encodedData[5] = (byte)(((encodedData.length&7)<<5) + 0x1F);
-                    encodedData[6] = (byte)0xFC;
-                    //write data
-                    try{
-                        audioFos.write(encodedData,0,encodedData.length);
-                    }catch (IOException e){}
-
-                    //continue circle
-                    mAudioCodec.releaseOutputBuffer(outputBuffIndex,false);
-                    outputBuffIndex = mAudioCodec.dequeueOutputBuffer(buInfo,0);
-                }
-            }
-
         }
     }
+}
 
-    public void readAudioTimer(){
-        if (isMuxering) {
-            //read raw data
-            int inputBuffIndex = mAudioCodec.dequeueInputBuffer(-1);
-            if (inputBuffIndex >= 0) {
-                //available input buffer
-                ByteBuffer bybu = mAudioCodec.getInputBuffer(inputBuffIndex);
-                bybu.clear();
-//            bybu
-                int len = mAudioRec.read(bybu, miniBuffSize);
-                //put it back
-                mAudioCodec.queueInputBuffer(inputBuffIndex, 0, len, System.nanoTime() / 1000, 0);
-            }
-            //get data out
-            MediaCodec.BufferInfo buInfo = new MediaCodec.BufferInfo();
-            int outputBuffIndex = mAudioCodec.dequeueOutputBuffer(buInfo, 0);
 
-            if (outputBuffIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                //add audio track
-                mAudioFormat = mAudioCodec.getOutputFormat();
-                mAudioTrackIndex = mMuxer.addTrack(mAudioFormat);
-                if (mAudioTrackIndex >= 0 && mVideoTrackIndex >= 0) {
-                    mMuxer.start();
-                }
-            } else if (outputBuffIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
 
-            } else {
-                while (outputBuffIndex >= 0) {
-                    ByteBuffer bybuOut = mAudioCodec.getOutputBuffer(outputBuffIndex);
-
-                    buInfo.presentationTimeUs = System.nanoTime() / 1000L;
-                    mMuxer.writeSampleData(mAudioTrackIndex, bybuOut, buInfo);
-
-                    //encodedData receive data from buffer
-                    byte[] encodedData = new byte[buInfo.size + 7];
-                    //get raw data
-                    bybuOut.get(encodedData, 7, buInfo.size);
-                    //add adts
-                    // to save as aac format
-                    int profile = 2;  //AAC LC
-                    int freqIdx = 4;  //44.1KHz
-                    int chanCfg = 2;  //CPE
-                    encodedData[0] = (byte) 0xFF;
-                    encodedData[1] = (byte) 0xF9;
-                    encodedData[2] = (byte) (((profile - 1) << 6) + (freqIdx << 2) + (chanCfg >> 2));
-                    encodedData[3] = (byte) (((chanCfg & 3) << 6) + (encodedData.length >> 11));
-                    encodedData[4] = (byte) ((encodedData.length & 0x7FF) >> 3);
-                    encodedData[5] = (byte) (((encodedData.length & 7) << 5) + 0x1F);
-                    encodedData[6] = (byte) 0xFC;
-                    //write data
-                    try {
-                        audioFos.write(encodedData, 0, encodedData.length);
-                    } catch (IOException e) {
-                    }
-
-                    //continue circle
-                    mAudioCodec.releaseOutputBuffer(outputBuffIndex, false);
-                    outputBuffIndex = mAudioCodec.dequeueOutputBuffer(buInfo, 0);
-                }
-            }
-        }
-
-        }
 
     private void initMuxer() {
         File muxFile=new File(muxPath);
@@ -480,37 +428,17 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         try{
             mMuxer = new MediaMuxer(muxPath,MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
         }catch (IOException e){}
-//        mMuxer.start();
+//        mMuxer.init();
     }
     public void addAudioTrack(){
 //        add audio track
 //        mAudioFormat = mAudioRecManager.getAudioCodecOutputFormat();
 //        mAudioTrackIndex = mMuxer.addTrack(mAudioFormat);
 //        if (mAudioTrackIndex>=0 && mVideoTrackIndex>=0){
-//            mMuxer.start();
+//            mMuxer.init();
 //        }
     }
-    public int getAudioTrackIndex(){
-        return mAudioTrackIndex;
-    }
-    public MediaMuxer getMuxer(){
-        return mMuxer;
-    }
-    public boolean getIsMuxering(){
-        return isMuxering;
-    }
-    public int getmAudioTrackIndex(){
-        return mAudioTrackIndex;
-    }
 
-//    public void initAudioManager(){
-//        // try audio record
-//        //init
-//        mAudioRecManager = new AudioRecManager();
-//        mAudioRecManager.initAudioRecManager(this);
-//        mAudioRecManager.initAudioFos();
-//        mAudioRecManager.initAudioCodec();
-//    }
     public void initVideoCodec(){
         //asynchronous
 //        try{
@@ -627,9 +555,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
 
-
-
-
 //        mTextureView = (TextureView) findViewById(R.id.preViewTextureView);
 //        mTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener(){
 //            @Override
@@ -684,7 +609,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     //init with given size
     private void initCamera2() {
 //        HandlerThread handlerThread = new HandlerThread("Camera2");
-//        handlerThread.start();
+//        handlerThread.init();
 //        childHandler = new Handler(handlerThread.getLooper());
 
         //handle message
@@ -885,7 +810,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 //encode every frame
 
 
-                if(isMuxering){
+                if(isVideoRec){
 
                     //yuv_420_888 to I420
 
@@ -941,6 +866,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //                    Rect crop = image.getCropRect();
 //                    int format = image.getFormat();
 
+                    //test
                     int width = crop.width();
                     int height = crop.height();
                     Image.Plane[] planes = image.getPlanes();
@@ -990,15 +916,17 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                         }
                     }
 
+
                     //add codec input buffer
                     //wait for 10 msec
-                    int iid = mVideoCodec.dequeueInputBuffer(10);
+                    int iid = mVideoCodec.dequeueInputBuffer(100);
                     if (iid>=0){
                         //get the input buffer
                         ByteBuffer iBuffer = mVideoCodec.getInputBuffer(iid);
                         iBuffer.clear();
                         //our image data put into buffer
                         iBuffer.put(data);
+
                         //put buffer back to the original place
                         mVideoCodec.queueInputBuffer(iid,0,data.length,100,1);
                     }
@@ -1007,61 +935,26 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                     int outputBufferId = mVideoCodec.dequeueOutputBuffer(bufferInfo,0);
                     //
                     if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
-
                         //add video track
-                        mVideoFormat = mVideoCodec.getOutputFormat();
-                        mVideoTrackIndex = mMuxer.addTrack(mVideoFormat);
-                        if (mVideoTrackIndex>= 0 && mAudioTrackIndex>=0){
-                            mMuxer.start();
-                        }
-
+//                        mVideoFormat = mVideoCodec.getOutputFormat();
+//                        mVideoTrackIndex = mMuxer.addTrack(mVideoFormat);
+//                        if (mVideoTrackIndex>= 0 && mAudioTrackIndex>=0){
+//                            mMuxer.init();
+//                        }
                     }else if(outputBufferId == MediaCodec.INFO_TRY_AGAIN_LATER){
-
                     }else{
                     while (outputBufferId>=0){
                         //output buffer
                         ByteBuffer outputBuffer = mVideoCodec.getOutputBuffer(outputBufferId);
                         outputBuffer.slice();
 
-                        //version 2.0
-                        //write data into muxer
-//                        mMuxer.writeSampleData(mVideoTrackIndex,outputBuffer,bufferInfo);
-//                        bufferInfo.presentationTimeUs = System.nanoTime() / 1000L;
-//                        mMuxer.writeSampleData(mVideoTrackIndex,outputBuffer,bufferInfo);
-
-
                         byte[] outData = new byte[bufferInfo.size];
                         outputBuffer.get(outData);
 
-                        //
-//                        mRtpSendPacket.setPayloadType(2);
-
-//                        ByteBuffer;
-
-
-
-
-
-                        //test
-                        //try to get a nalu data
-//                        if (s == 1 ){
-//                            byte[] naluData = new byte[bufferInfo.size];
-//                            File f = new File(Environment.getExternalStorageDirectory() + "/carTempNalu");
-//                            if (f.exists()){
-//                                f.delete();
-//                            }
-//                            try{
-////                                byte [] naluData = {'c','c'};
-//                                OutputStream nalufos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/carTempNalu",true);
-//                                nalufos.write(outData,0,outData.length);
-//                            }catch (FileNotFoundException e){
-//                            }catch (IOException e){}
-//                            s = 2;
-//                        }
 
                         //deal key frame v3.0
                         if (bufferInfo.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG){
-                            //start frame
+                            //init frame
                             HeadInfo = new byte[outData.length];
                             HeadInfo = outData;
                         }else if (bufferInfo.flags%8 == MediaCodec.BUFFER_FLAG_KEY_FRAME){
@@ -1076,42 +969,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                                 H264fos.write(key, 0, key.length);
                             }catch (IOException e){}
 
-                            //message to send data
-                            Message m = new Message();
-                            m.what = 0x1;
-//                            String dataString = new String(key);
-////                            dataString = String.copyValueOf(dataString.toCharArray(), 0, key.length);
-//                            m.obj = dataString;
-//                            m.obj = key.toString();
-                            m.obj = key;
-//                            //get recv handler
-                            mSendH264Run.mRecUIHandler.sendMessage(m);
-//
-//                            //debug
-//                            muxStatus.setText(dataString.length()+"");
-
-
-                            //send directly
-//                            mSendH264Run.sendFile(key);
-
-
-
-
-                            //write key frame to mp4
-//                            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-//                            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-//                            bufferInfo.offset = 0;
-//                            bufferInfo.flags = MediaCodec.BUFFER_FLAG_KEY_FRAME;
-//                            bufferInfo.presentationTimeUs = System.nanoTime() / 1000L;
-//                            info.size = bufferInfo.size
-//                            mMuxer.writeSampleData(mVideoTrackIndex,outputBuffer,bufferInfo);
-                            //[B@2fc2923d
-                            //5B 42 40 32  ....
-//                            if (s == 1){
-//                                Message m = mainHandler.obtainMessage(1,1,1,outData.toString());
-//                                mainHandler.sendMessage(m);
-//                                s = 2;
-//                            }
+                            //put key frame to queue
+                            offerVideoQueue(key);
 
                         }else if(bufferInfo.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM){
                             //end frame
@@ -1121,35 +980,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                             }catch (IOException e){}
 
                             //
-
-
-                            //use　message to senf data
-                                Message m = new Message();
-                                m.what = 0x1;
-//                                String dataString = new String(outData);
-//                                dataString = String.copyValueOf(dataString.toCharArray(), 0, outData.length);
-//                                m.obj = dataString;
-                            m.obj = outData;
-                                //get recv handler
-                                mSendH264Run.mRecUIHandler.sendMessage(m);
-
-//                            mSendH264Run.sendFile(outData);
-                            //debug
-//                            muxStatus.setText(dataString.length()+"");
-
-
-                            //write data
-                            // write mp4 data
-//                            bufferInfo.offset = 0;
-//                            bufferInfo.flags = MediaCodec.BUFFER_FLAG_SYNC_FRAME;
-//                            bufferInfo.presentationTimeUs = System.nanoTime() / 1000L;
-//                            mMuxer.writeSampleData(mVideoTrackIndex,outputBuffer,bufferInfo);
-                            //[B@2fc2923d
-//                            if (s == 1){
-//                                Message m = mainHandler.obtainMessage(1,1,1,outData.toString());
-//                                mainHandler.sendMessage(m);
-//                                s = 2;
-//                            }
+                            offerVideoQueue(outData);
 
                         }
                         //release output buffer
@@ -1162,14 +993,29 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 }
 
                 image.close();
-
-                //
-//                readAudioData();
-//                readAudioTimer();
             }
         }, null);
     }
 
+    public void offerVideoQueue(byte[] b){
+        int n = b.length/1000;
+        for(int i = 0;i< n+1;i++){
+            int len = 1000;
+            if (i == n){
+                len = b.length - i*1000;
+            }
+
+            //b.length = 1000,2000
+            if (len == 0)
+                break;
+
+            byte[] tmp = new byte[len];
+            System.arraycopy(b,i*1000,tmp,0,len);
+            getVideoSendQueue().offer(tmp);
+            i++;
+
+        }
+    }
 
     /**
      * camera listener
@@ -1196,7 +1042,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     };
 
     /**
-     * start preview
+     * init preview
      */
     private void startCamearPreview() {
         try {
@@ -1413,9 +1259,9 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //    public void startAudioRec(View v){
 //
 //        mAudioRec.startRecording();
-//        //audio start thread
+//        //audio init thread
 //        mAudioDataCatchThread = new Thread(new audioDataCatch());
-//        mAudioDataCatchThread.start();
+//        mAudioDataCatchThread.init();
 //
 //        isAudioRecording = true;
 //
@@ -1435,7 +1281,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //        videoStatus.setText("video not rec...");
 //    }
 //    public void startMux(View v){
-////        mMuxer.start();
+////        mMuxer.init();
 //        isMuxering = true;
 //        muxStatus.setText("muxing...");
 //    }
@@ -1445,8 +1291,9 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //    }
 
     public void toggleAudioRec(View v){
-        isAudioRecording = !isAudioRecording;
+//        isAudioRecording = !isAudioRecording;
 
+        isAudioRecording = true;
         if (isAudioRecording){
             mAudioDataCatchThread = new Thread(new audioDataCatch());
             mAudioDataCatchThread.start();
@@ -1454,6 +1301,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         }else{
             audioStatus.setText("audio not rec...");
         }
+
+        mAudioRec.startRecording();
 
     }
     public void toggleVideoRec(View v){
@@ -1463,6 +1312,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         }else{
             videoStatus.setText("video not rec...");
         }
+        sendH264.init();
     }
     public void toggleMux(View v){
         isMuxering = !isMuxering;
@@ -1512,6 +1362,14 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //                            sendH264Status.setText("");
                             sendH264Status.append("i");
                             break;
+                        case 0x201:
+                        case 0x202:
+                        case 0x203:
+                            sendH264Status.append(msg.obj.toString());
+                            break;
+                        case 0x301:
+                            sendH264Status.append(msg.obj.toString()+" ");
+                            break;
                     }
 
                 }
@@ -1530,6 +1388,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //        mH264Handler = new Handler(){}
 
     }
+
     private int lastend = 0;//offset: last byte
     /*
     *
@@ -1546,7 +1405,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             System.arraycopy(toWriteBuffer,0,getTotalBuffer(),lastend,preLen);
 
             //later part
-            //start at the beginning
+            //init at the beginning
             int laterLen = toWriteBuffer.length - preLen;
             System.arraycopy(toWriteBuffer,preLen,getTotalBuffer(),0,laterLen);
 
@@ -1580,34 +1439,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     }
 
 
-
-    //load jni lib
-//    static {
-//        System.loadLibrary("sendh264");
-//    }
-    //send h264 file
-//    public native void sendH264Func(String filePath);
-
-    //-----------------------------RTP
-//    private RtpPacket mRtpSendPacket = null;
-//    private RtpSocket mRtpSendSocket = null;
-//    private byte[] socketSendBuffer = new byte[65536];
-//    public void initRtpPacketAndSocket(){
-//        //packet
-//        mRtpSendPacket = new RtpPacket(socketSendBuffer, 0);
-//        //socket
-////        try {
-////            //rtp_socket = new RtpSocket(new SipdroidSocket(20000)); //初始化套接字，20000为接收端口号
-////            mRtpSendSocket = new RtpSocket(new SipdroidSocket(19888), InetAddress.getByName(remote_ip), remote_port);
-////        } catch (SocketException e) {
-////            e.printStackTrace();
-////        } catch (UnknownHostException e) {
-////            e.printStackTrace();
-////        }
-////        mRtpSendPacket = new
-//    }
-
-
     class videoCodecRun implements Runnable{
         @Override
         public void run() {
@@ -1630,7 +1461,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
                 //deal key frame v3.0
                 if (bufferInfo.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG){
-                    //start frame
+                    //init frame
                     HeadInfo = new byte[outData.length];
                     HeadInfo = outData;
                 }else if (bufferInfo.flags%8 == MediaCodec.BUFFER_FLAG_KEY_FRAME){
@@ -1747,6 +1578,59 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 //   flags  如果正在配置的对象是用作编码器，此处加上CONFIGURE_FLAG_ENCODE 标签。
                 mPlayCodec.configure(mediaformat, holder.getSurface(), null, 0);
 
+
+                //解码器设置
+                MediaFormat mediaFormat;
+                mPlayCodec.setCallback(new MediaCodec.Callback(){
+                    @Override
+                    public void onInputBufferAvailable(MediaCodec codec, int index) {
+                        ByteBuffer inputBuffer = codec.getInputBuffer(index);
+                        int len = 0;
+                        if (!h264DataQueue.isEmpty()){
+                            try{
+                                byte[] b = h264DataQueue.take();
+                                len = b.length;
+                                inputBuffer.put(b);
+                            }catch (InterruptedException e){}
+
+                        }
+                        codec.queueInputBuffer(index,0,len,1000,0);
+                    }
+
+                    @Override
+                    public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
+                        ByteBuffer outputBuffer = codec.getOutputBuffer(index);
+                        MediaFormat bufferFormat = codec.getOutputFormat(index); // option A
+                        // bufferFormat is equivalent to mOutputFormat
+                        // outputBuffer is ready to be processed or rendered.
+
+                        if (index >= 0) {
+                            while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - 1000) {
+                                try {
+                                    Thread.sleep(100);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            boolean doRender = (info.size != 0);
+                            codec.releaseOutputBuffer(index, doRender);
+                        } else {
+                        }
+                    }
+
+                    @Override
+                    public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
+
+                    }
+
+                    @Override
+                    public void onError(MediaCodec codec, MediaCodec.CodecException e) {
+
+                    }
+                });
+
+                mPlayCodec.start();
+
             }
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -1797,13 +1681,18 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private byte[] totalBuffer = new byte[10000000];
 
     public byte[] streamBuffer = null;
+
+    //queue use
+    private BlockingQueue<byte[]> h264DataQueue = new ArrayBlockingQueue<byte[]>(10000);
+
     private class decodeH264Thread implements Runnable{
         @Override
         public void run() {
 //            while(isPlayH264){
             try {
-                decodeLoop();
+//                decodeLoop();
 //                decodeLoop1();
+//                decodeLoop2();
             } catch (Exception e) {
             }
         }
@@ -1816,66 +1705,28 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             long timeoutUs = 10000;
             byte[] marker0 = new byte[]{0, 0, 0, 1};
             byte[] dummyFrame = new byte[]{0x00, 0x00, 0x01, 0x20};
-//            streamBuffer = null;
             try {
                 streamBuffer = getBytes(mPlayInputStream);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            //file inpout stream change into buffer
-//            streamBuffer = getTotalBuffer();
-
             int bytes_cnt = 0;
             while (mStopFlag == false){
-                //file inpout stream change into buffer
-                streamBuffer = getTotalBuffer().clone();
-
-//                Message m = new Message();
-//                m.what = 0x105;
-//                mUIHandler.sendMessage(m);//debug
-//                mUIHandler.sendEmptyMessage(0);
-
                 bytes_cnt = streamBuffer.length;
-                //test
-//                bytes_cnt = lastend;
-//                bytes_cnt = totalBufferIndex;
-//                bytes_cnt = 10000000;//works
-
                 if (bytes_cnt == 0) {
                     streamBuffer = dummyFrame;
                 }
-
                 int startIndex = 0;
                 int remaining = bytes_cnt;
-
-
                 int lastCopy = 0;
                 while (true){
 
-                    //debug
-//                    remaining = totalBufferIndex;
-                    streamBuffer = getTotalBuffer().clone();
-                    remaining = streamBuffer.length;
-
-//                    System.arraycopy(getTotalBuffer(),lastCopy,streamBuffer,lastCopy,totalBufferIndex);
-//                    lastCopy = totalBufferIndex;
-//                    remaining = totalBufferIndex;
-
-                    //
-
-                    //test
-                    //get data
-//                    byte[] b = getCodecPutData();
-
-                    if (remaining == 0 || startIndex >= remaining) {
+                    if (remaining == 0 || startIndex >= remaining && 1 ==2) {
                         break;
                     }
-
                     //origin
                     int nextFrameStart = KMPMatch(marker0, streamBuffer, startIndex+ 2, remaining);
-//                    int nextFrameStart = KMPMatch(marker0, totalBuffer, lastFrameEnd, lastend);
-                    //
                     if (nextFrameStart == -1) {
                         nextFrameStart = remaining;
                     } else {
@@ -1901,17 +1752,10 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //                        byte[] b = getCodecPutData();
 //                        byteBuffer.put(b);
 //                        mPlayCodec.queueInputBuffer(inIndex, 0, b.length, 100, 0);
-
-
                         startIndex = nextFrameStart;
                     } else {
                         continue;
                     }
-                    //test
-//                    try{
-//                        Thread.sleep(1);//500ms
-//                    }catch (InterruptedException e){}
-
                     int outIndex = mPlayCodec.dequeueOutputBuffer(info, timeoutUs);
                     if (outIndex >= 0) {
                         //帧控制是不在这种情况下工作，因为没有PTS H264是可用的
@@ -2001,6 +1845,47 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             }
             mStopFlag = true;
         }
+    }
+    public void decodeLoop2(){
+        long startMs = System.currentTimeMillis();
+        long timeoutUs = 10000;
+        MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+        int inIndex = mPlayCodec.dequeueInputBuffer(timeoutUs);
+        if (inIndex >= 0) {
+            ByteBuffer byteBuffer = mPlayCodec.getInputBuffer(inIndex);
+//                        ByteBuffer byteBuffer = inputBuffers[inIndex];
+            byteBuffer.clear();
+
+            //get data from queue
+            byte[] b = null;
+            if (!h264DataQueue.isEmpty()){
+                try{
+                    b = h264DataQueue.take();
+                }catch (InterruptedException e){}
+            }
+            byteBuffer.put(b);
+            mPlayCodec.queueInputBuffer(inIndex, 0, b.length, 0, 0);
+        }
+        else {
+//            continue;
+        }
+
+        int outIndex = mPlayCodec.dequeueOutputBuffer(info, timeoutUs);
+
+        if (outIndex >= 0) {
+            //帧控制是不在这种情况下工作，因为没有PTS H264是可用的
+            while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - startMs) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            boolean doRender = (info.size != 0);
+            mPlayCodec.releaseOutputBuffer(outIndex, doRender);
+        } else {
+        }
+
     }
 
     public byte[] getCodecPutData(){

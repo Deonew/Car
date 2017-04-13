@@ -1,4 +1,4 @@
-package com.example.deonew.car;
+package com.example.deonew.car.Audio;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -7,6 +7,8 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaRecorder;
 import android.os.Environment;
+
+import com.example.deonew.car.VideoActivity2;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -86,7 +88,7 @@ public class AudioRecManager {
     public void startAudioRec(){
         mAudioRec.startRecording();
 
-        //start thread
+        //init thread
         mDataCatchThread = new Thread(new dataCatch());
         mDataCatchThread.start();
 
@@ -118,7 +120,7 @@ public class AudioRecManager {
 //        byte[] buff = new byte[miniBuffSize];
 //        mAudioRec.read(buff,0,miniBuffSize);
 
-        if (mVideoActivity2.getIsMuxering()){
+//        if (mVideoActivity2.getIsMuxering()){
         //read raw data
         int inputBuffIndex = mAudioCodec.dequeueInputBuffer(-1);
         if (inputBuffIndex>=0){
@@ -175,7 +177,7 @@ public class AudioRecManager {
         }
         }
 
-        }
+//        }
     }
 //    public MediaFormat getAudioCodecOutputFormat(){
 //        return mAudioCodec.getOutputFormat();

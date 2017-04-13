@@ -75,9 +75,9 @@ public class AudioActivity1 extends Activity implements View.OnClickListener {
 //        record = new Thread(new recordSound());
 //        play = new Thread(new playRecord());
 //        // 启动录制线程
-//        record.start();
+//        record.init();
 //        // 启动播放线程
-//        play.start();
+//        play.init();
 
     }
 

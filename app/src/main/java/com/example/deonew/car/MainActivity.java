@@ -15,9 +15,12 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.example.deonew.car.Audio.AudioSendRun;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -53,11 +56,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     CarThread carThread;
 
 
+    private Thread mAudioSendTH = null;
+
+    private MainViewPagerAdapter mainViewPagerAdapter;
+
+
+    private static final String TAG = MainActivity.class.getSimpleName();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.d(TAG,"ok");
 
 //        setTagsForButtons();
 
@@ -76,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mainTabLayout.addTab(mainTabLayout.newTab().setText(titleList.get(2)));
 
         //new adapter
-        MainViewPagerAdapter mainViewPagerAdapter = new MainViewPagerAdapter(getSupportFragmentManager(),this);
+        mainViewPagerAdapter = new MainViewPagerAdapter(getSupportFragmentManager(),this);
         //view pager and adapter
         ViewPager viewPager = (ViewPager) findViewById(R.id.mainViewPager);
         viewPager.setAdapter(mainViewPagerAdapter);
@@ -95,18 +107,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
+        //audio send thread
+        mAudioSendTH = new Thread(new AudioSendRun());
+        mAudioSendTH.start();
+
 
 
 //        initTVs();
 
-//        createATestTxtFile();
-
-        //显示所有的文件
-//        String[] files = fileList();
-//        String f;
-//        for (int i=0;i<files.length;i++){
-//            fileListTV.append(files[i]+'\n');
-//        }
 
 
         //ui thread handle message
@@ -120,10 +128,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         };
     }
 
+    public void toggleAudio(View v){
+//        mainViewPagerAdapter.getItem(2).initAudioRec();
+    }
+
 
     public void sendText(){
 
     }
+
     /*
     * init textviews
     */
@@ -137,37 +150,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     *
     */
     private void setTagsForButtons(){
-//        btnUni = (Button)this.findViewById(R.id.uni);
-//        btnUni.setOnClickListener(this);
-//        btnUni.setTag("uni");
-//
-//        btnUni = (Button)this.findViewById(R.id.multi);
-//        btnUni.setOnClickListener(this);
-//        btnUni.setTag("multi");
-//
-//        btnUni = (Button)this.findViewById(R.id.broad);
-//        btnUni.setOnClickListener(this);
-//        btnUni.setTag("broad");
-//
-//        //-----control audio
-//        btnArStart = (Button)this.findViewById(R.id.arStart);
-//        btnArStart.setOnClickListener(this);
-//        btnArStart.setTag("arStart");
-//        btnArStop = (Button)this.findViewById(R.id.arStop);
-//        btnArStop.setOnClickListener(this);
-//        btnArStop.setTag("arStop");
-
-        //
-//        Button btnToAudio = (Button)this.findViewById(R.id.toAudioAC);
-//        btnToAudio.setOnClickListener(this);
-//        btnToAudio.setTag("toAudioAC");
-
-        //---to video
-//        Button btnToVideo = (Button)this.findViewById(R.id.toVideoAC);
-//        btnToVideo.setOnClickListener(this);
-//        btnToVideo.setTag("toVideoAC");
-
-
     }
     @Override
     public void onClick(View v){
@@ -329,30 +311,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ( i >> 24 & 0xFF) ;
     }
 
-    //------------audio files list
-    public void createATestTxtFile(){
-        new Thread(){
-            @Override
-            public void run() {
-                super.run();
-                try{
-                    FileOutputStream fo = openFileOutput("first text.txt",MODE_APPEND);
-                    PrintStream ps = new PrintStream(fo);//把fo包装成ps
-                    ps.println("hahah");
-                    ps.close();
-                }catch(Exception e){
 
-                }
-            }
-        }.start();
-    }
-    public void createATestAudioFile(){
-        String[] files = fileList();
-        //if test file exists, skip
-//        if ()
-    }
     /*
-    * start record
+    * init record
     * save as:
     */
     public void record(){
@@ -406,12 +367,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 ////            Log.e("AudioRecord","Recording Failed");
 //        }
 //            }
-//        }.start();
+//        }.init();
 
 
 //        audioRecordTH recordth = new audioRecordTH();
 //        recordth.init();
-//        recordth.start();
+//        recordth.init();
 
     }
     public void stopRecord(){

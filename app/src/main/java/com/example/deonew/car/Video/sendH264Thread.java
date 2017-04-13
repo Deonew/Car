@@ -66,7 +66,6 @@ public class sendH264Thread implements Runnable{
         };
         Looper.loop();
 
-//
 //        File outf = new File("/storage/emulated/0/carTempRecvvvv.264");
 //        try{
 //            fos = new FileOutputStream(outf);
@@ -92,7 +91,6 @@ public class sendH264Thread implements Runnable{
     public InputStream getReceiveStream(){
         return mRecvInputSream;
     }
-
 
     //send carTemp.h264 to server
     public void sendFile(byte[] b){

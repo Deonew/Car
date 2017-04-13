@@ -160,7 +160,7 @@ public class AudioActivity extends Activity {
     }
 
     public void startRecordAudio() {
-//        txt.append("start");
+//        txt.append("init");
 
         //1 create audio record
         //get the mini buffer size to new an instance
@@ -169,17 +169,17 @@ public class AudioActivity extends Activity {
 //        audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, frequency,
 //                channelConfiguration, EncodingBitRate, recBufSize);
 
-        //2 start
+        //2 init
 //        audioRecord.startRecording();
 
-        //3 start a new thread to write data
+        //3 init a new thread to write data
 //        isRecording = true;
 //        recordingThread = new Thread(new Runnable() {
 //            public void run() {
 //                writeAudioDataToFile();
 //            }
 //        },"AudioRecorder Thread");
-//        recordingThread.start();
+//        recordingThread.init();
 
 
         //task to record
@@ -193,7 +193,7 @@ public class AudioActivity extends Activity {
         isRecording = false;
     }
 
-    //start play
+    //init play
     public void startPlay() {
         player = new PlayTask();
         player.execute();

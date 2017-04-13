@@ -125,10 +125,10 @@ public class PlainDatagramSocketImpl extends DatagramSocketImpl {
     @Override
     public void bind(int port, InetAddress addr) throws SocketException {
         String prop = null; //AccessController.doPrivileged(new PriviAction<String>("bindToDevice")); //$NON-NLS-1$
-        Log.i("bind", "start bind");
+        Log.i("bind", "init bind");
         boolean useBindToDevice = prop != null && prop.toLowerCase().equals("true"); //$NON-NLS-1$
         try {
-            Log.i("bind", "start bind2");
+            Log.i("bind", "init bind2");
             // Ignore failures
             setOption(SO_BROADCAST, Boolean.TRUE);
             setOption(SocketOptions.SO_REUSEADDR, Boolean.TRUE);

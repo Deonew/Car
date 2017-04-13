@@ -15,7 +15,6 @@
             android:id="@+id/toggleVideoRec"
             android:text="toggleVideoRec"
             android:onClick="toggleVideoRec"/>
-
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
