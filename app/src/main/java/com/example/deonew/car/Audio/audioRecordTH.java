@@ -1,4 +1,4 @@
-package com.example.deonew.car;
+package com.example.deonew.car.Audio;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -64,7 +64,7 @@ class audioRecordTH extends Thread
 
             dout=new DataOutputStream(s.getOutputStream());
 
-            //new Thread(R1).init();
+            //new Thread(R1).startSendH264();
 
         }
 
@@ -99,7 +99,7 @@ class audioRecordTH extends Thread
         try{
 
             byte[] bytes_pkg;
-            // init
+            // startSendH264
             mRecord.startRecording();
 //            while (isRecording) {
             while (true) {

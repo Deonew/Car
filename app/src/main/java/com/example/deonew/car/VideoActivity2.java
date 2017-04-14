@@ -32,6 +32,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -115,7 +116,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private FileOutputStream audioFos;
     private String audioPath = Environment.getExternalStorageDirectory() + "/carTemp.aac";
     private AudioRecord mAudioRec;
-    //for init
+    //for startSendH264
     private int sampleRate = 44100;
     private int channelCount = 2;
     //stereo
@@ -144,22 +145,18 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private boolean isMuxering = false;//control
     private MediaMuxer mMuxer;//instance
     private String muxPath = Environment.getExternalStorageDirectory() + "/carTemp.mp4";
-    private MediaFormat mAudioFormat;
-    private MediaFormat mVideoFormat;
-    //video track index
-    private int mVideoTrackIndex;
-    //audio track index
-    private int mAudioTrackIndex;
 
 
 
     //
     private SendH264 sendH264;
-
-    private BlockingQueue<byte[]> VideoSendQueue = new ArrayBlockingQueue<byte[]>(10000);
-    public BlockingQueue getVideoSendQueue(){
-        return VideoSendQueue;
+    private BlockingQueue<byte[]> H264SendQueue = new ArrayBlockingQueue<byte[]>(10000);
+    public BlockingQueue getH264SendQueue(){
+        return H264SendQueue;
     }
+
+
+
 
 
 
@@ -191,11 +188,11 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //----------------------------------------------------------video
         //camera
         initView();
-        //init video codec
+        //startSendH264 video codec
         initVideoCodec();
 
 
-        //init file manager
+        //startSendH264 file manager
         File file=new File(H264Path);
         //every time, create a new file
         if (file.exists()){
@@ -213,11 +210,11 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
         //not used
 //        mVideoDataReadTH = new Thread(new videoCodecRun());
-//        mVideoDataReadTH.init();
+//        mVideoDataReadTH.startSendH264();
 
-//        init read data
+//        startSendH264 read data
 //        isVideoRec = true;
-        //init audio
+        //startSendH264 audio
 //        initAudioManager();
         //
 //        mAudioRecManager.startAudioRec();
@@ -227,8 +224,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
 //        initMuxer();
-        //init muxer
-//        mMuxer.init();
+        //startSendH264 muxer
+//        mMuxer.startSendH264();
 //
 //        initNImageReader();
 
@@ -245,7 +242,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //        initRecvH264TH();
 
         //
-//        init(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
+//        startSendH264(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
 
 //        initPlaySurfaceView();
 
@@ -253,7 +250,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 //        mSurfaceView.setVisibility(View.INVISIBLE);//debug
 
-//        init(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
+//        startSendH264(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
 //        mPlaySurface
 
 //        getIP();
@@ -322,10 +319,10 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     //--------------------------------audio
     public void initAudioRec(){
         miniBuffSize = AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat)*2;
-        //init mAudioRec according to minibuff and given conf
+        //startSendH264 mAudioRec according to minibuff and given conf
         mAudioRec = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConf, audioFormat, miniBuffSize);
 
-        //init fos
+        //startSendH264 fos
         File file=new File(audioPath);
         if (file.exists()){
             file.delete();
@@ -428,14 +425,14 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         try{
             mMuxer = new MediaMuxer(muxPath,MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
         }catch (IOException e){}
-//        mMuxer.init();
+//        mMuxer.startSendH264();
     }
     public void addAudioTrack(){
 //        add audio track
 //        mAudioFormat = mAudioRecManager.getAudioCodecOutputFormat();
 //        mAudioTrackIndex = mMuxer.addTrack(mAudioFormat);
 //        if (mAudioTrackIndex>=0 && mVideoTrackIndex>=0){
-//            mMuxer.init();
+//            mMuxer.startSendH264();
 //        }
     }
 
@@ -512,7 +509,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         @Override
         public void run() {
 //            super.run();
-            // init mediacodec in thread
+            // startSendH264 mediacodec in thread
             //
             initMediaC();
 
@@ -543,7 +540,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     }
 
     /**
-     * init preview
+     * startSendH264 preview
      */
     private void initView() {
         iv_show = (ImageView) findViewById(R.id.iv_show_camera2_activity);
@@ -560,7 +557,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //            @Override
 //            public void onSurfaceTextureAvailable(SurfaceTexture surface, int surfaceWidth, int surfaceHeight) {
 //                //when surface texture available
-//                //init camera according to given surfaceWidth and surfaceHeight
+//                //startSendH264 camera according to given surfaceWidth and surfaceHeight
 //                initCamera2(surfaceWidth,surfaceHeight);
 //            }
 //            @Override
@@ -606,10 +603,10 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     }
 
     private byte[] HeadInfo = null;
-    //init with given size
+    //startSendH264 with given size
     private void initCamera2() {
 //        HandlerThread handlerThread = new HandlerThread("Camera2");
-//        handlerThread.init();
+//        handlerThread.startSendH264();
 //        childHandler = new Handler(handlerThread.getLooper());
 
         //handle message
@@ -726,7 +723,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
     private int s = 1;
     private void initImageReader() {
-        //init mH264Handler
+        //startSendH264 mH264Handler
 
 //        mImageReader = ImageReader.newInstance(surfaceWidth, surfaceHeight, ImageFormat.YV12,1);//ok
 //        mImageReader = ImageReader.newInstance(surfaceWidth, surfaceHeight, ImageFormat.JPEG,1);//test jpeg//ok
@@ -939,7 +936,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //                        mVideoFormat = mVideoCodec.getOutputFormat();
 //                        mVideoTrackIndex = mMuxer.addTrack(mVideoFormat);
 //                        if (mVideoTrackIndex>= 0 && mAudioTrackIndex>=0){
-//                            mMuxer.init();
+//                            mMuxer.startSendH264();
 //                        }
                     }else if(outputBufferId == MediaCodec.INFO_TRY_AGAIN_LATER){
                     }else{
@@ -954,7 +951,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
                         //deal key frame v3.0
                         if (bufferInfo.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG){
-                            //init frame
+                            //startSendH264 frame
                             HeadInfo = new byte[outData.length];
                             HeadInfo = outData;
                         }else if (bufferInfo.flags%8 == MediaCodec.BUFFER_FLAG_KEY_FRAME){
@@ -1011,7 +1008,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
             byte[] tmp = new byte[len];
             System.arraycopy(b,i*1000,tmp,0,len);
-            getVideoSendQueue().offer(tmp);
+            getH264SendQueue().offer(tmp);
             i++;
 
         }
@@ -1042,7 +1039,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     };
 
     /**
-     * init preview
+     * startSendH264 preview
      */
     private void startCamearPreview() {
         try {
@@ -1279,7 +1276,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         }else{
             videoStatus.setText("video not rec...");
         }
-        sendH264.init();
+        sendH264.startSendH264();
     }
     public void toggleMux(View v){
         isMuxering = !isMuxering;
@@ -1300,7 +1297,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 //    private Thread mH264SendTH=null;
     public void initSendH264TH(){
-        //init ui handler
+        //startSendH264 ui handler
         if (mUIHandler == null){
             mUIHandler = new Handler(){
                 @Override
@@ -1343,7 +1340,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             };
         }
 
-        //init thread
+        //startSendH264 thread
         if (mSendH264Run == null){
             mSendH264Run =new sendH264Thread(mUIHandler, this);
         }
@@ -1372,7 +1369,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             System.arraycopy(toWriteBuffer,0,getTotalBuffer(),lastend,preLen);
 
             //later part
-            //init at the beginning
+            //startSendH264 at the beginning
             int laterLen = toWriteBuffer.length - preLen;
             System.arraycopy(toWriteBuffer,preLen,getTotalBuffer(),0,laterLen);
 
@@ -1388,7 +1385,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         mSendH264Run.mRecUIHandler.sendMessage(m);
 
 //        Sleep(10);
-//        init(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
+//        startSendH264(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
 
 
     }
@@ -1428,7 +1425,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
                 //deal key frame v3.0
                 if (bufferInfo.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG){
-                    //init frame
+                    //startSendH264 frame
                     HeadInfo = new byte[outData.length];
                     HeadInfo = outData;
                 }else if (bufferInfo.flags%8 == MediaCodec.BUFFER_FLAG_KEY_FRAME){
@@ -2013,5 +2010,170 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         return lsp;
     }
 
+
+    //-----------------------------------------------------------decode h264 thread
+    private class decodeH264Thread1 implements Runnable{
+        @Override
+        public void run() {
+
+            try {
+                decodeLoop();
+//                        isPlay = false;
+                //                decodeLoop1();
+            } catch (Exception e) {}
+
+        }
+        //标记 camera旧api 已改
+
+        private byte[] streamBuffer = null;
+        private void decodeLoop(){
+
+//            ByteBuffer[] inputBuffers = mPlayCodec.getInputBuffers();
+            //解码后的数据，包含每一个buffer的元数据信息，例如偏差，在相关解码器中有效的数据大小
+
+
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+            long startMs = System.currentTimeMillis();
+            long timeoutUs = 10000;
+
+
+            try {
+                streamBuffer = getBytes(mPlayInputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+//            int bytes_cnt = 0;
+            while (mStopFlag == false){
+                end = streamBuffer.length;
+                while (!mStopFlag){
+                    int inIndex = mPlayCodec.dequeueInputBuffer(timeoutUs);
+                    if (inIndex >= 0) {
+                        ByteBuffer byteBuffer = mPlayCodec.getInputBuffer(inIndex);
+//                        ByteBuffer byteBuffer = inputBuffers[inIndex];
+                        byteBuffer.clear();
+
+                        //放入一帧数据
+//                        byte[] b = getAFrame();
+//                        byteBuffer.put(b);
+
+                        //队列获取文件数据
+                        byte[] b = getOneNalu();
+                        byteBuffer.put(b);
+                        try{
+                            Thread.sleep(30);
+                        }catch (InterruptedException e){}
+//                        Log.d("llllllll",b.length+"");
+
+                        //在给指定Index的inputbuffer[]填充数据后，调用这个函数把数据传给解码器
+//                        mPlayCodec.queueInputBuffer(inIndex, 0, nextFrameStart - startIndex, 0, 0);
+                        mPlayCodec.queueInputBuffer(inIndex, 0, b.length, 0, 0);
+
+                    } else {
+                        continue;
+                    }
+                    int outIndex = mPlayCodec.dequeueOutputBuffer(info, timeoutUs);
+                    if (outIndex >= 0) {
+                        while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - startMs) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        boolean doRender = (info.size != 0);
+                        mPlayCodec.releaseOutputBuffer(outIndex, doRender);
+                    } else {
+                        Log.e(TAG, "no output");
+                    }
+                }
+                mStopFlag = true;
+//                mHandler.sendEmptyMessage(0);
+            }
+
+        }
+
+        int startIndex = 0;
+        private  int nextFrameStart = 0;
+        private int end;
+        private byte[] naluHeader = new byte[]{0, 0, 0, 1};
+        public byte[] getAFrame(){
+            nextFrameStart = KMPMatch(naluHeader, streamBuffer, startIndex + 2, end);
+            byte[] result = new byte[nextFrameStart - startIndex];
+            System.arraycopy(streamBuffer, startIndex, result,0, nextFrameStart - startIndex);
+            startIndex = nextFrameStart;
+            return result;
+        }
+
+    }
+
+    private BlockingQueue<byte[]> video_data_Queue = new ArrayBlockingQueue<byte[]>(10000);
+    private byte[] currentBuff = new byte[102400];
+
+    private byte[] naluHead = {0,0,0,1};
+    private byte[] lsp = {0,1,2,0};
+    private int currentBuffStart = 0;//valid data start
+    private int currentBuffEnd = 0;
+    int cnt = 0;
+
+    public byte[] getOneNalu(){
+        int n = getNextIndex();
+//        Log.d(TAG,"get one"+n);
+        byte[] naluu = new byte[n-currentBuffStart];
+        System.arraycopy(currentBuff, currentBuffStart, naluu, 0, n-currentBuffStart);
+
+        //handle currentBuff
+        System.arraycopy(currentBuff, n , currentBuff, 0, currentBuff.length - n);
+
+        //set index
+        currentBuffStart = 0;
+        currentBuffEnd = currentBuffEnd - naluu.length;
+        return naluu;
+    }
+    //added by deonew
+    private int nextNaluHead = -1;
+    public int getNextIndex(){
+        nextNaluHead = getNextIndexOnce();
+
+        //currentBuff don't contain a nalu
+        //poll data
+        while(nextNaluHead == -1) {
+            if (video_data_Queue.isEmpty()){break;}
+//                break;
+            byte[] tmp = video_data_Queue.poll();
+//            if (tmp == null)
+//                return nextNaluHead;
+
+            System.arraycopy(tmp,0,currentBuff,currentBuffEnd,tmp.length);
+            currentBuffEnd = currentBuffEnd + tmp.length;
+            nextNaluHead = getNextIndexOnce();
+            cnt++;
+//            Log.d(TAG,"poll"+cnt);
+        }
+        nextNaluHead = nextNaluHead - 3;
+        // currentBuffStart = nextNaluHead;
+        return nextNaluHead;
+    }
+
+    //get next 000000[01]
+    public int getNextIndexOnce(){
+        int nextIndex = -1;
+        byte[] naluHead = {0,0,0,1};
+        byte[] correctBuff = {0,1,2,0};
+        int i = 0;
+        int index = 0;
+        for(i = currentBuffStart+1; i < currentBuffEnd;i++){
+            while (index > 0 && currentBuff[i] != naluHead[index]) {
+                index = correctBuff[index - 1];
+            }
+            if (currentBuff[i] == naluHead[index]) {
+                index++;
+                if (index == 4){
+                    nextIndex = i;//i = 00000001中的01
+                    break;
+                }
+            }
+        }
+        return nextIndex;
+    }
 
 }

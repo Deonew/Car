@@ -41,7 +41,7 @@ public class AudioFragment extends Fragment {
 //        isAudioRecording = !isAudioRecording;
 //        if (isAudioRecording){
 //            mAudioDataCatchThread = new Thread(new audioDataCatch());
-//            mAudioDataCatchThread.init();
+//            mAudioDataCatchThread.startSendH264();
 //        }else{}
 //    }
     @Override
@@ -66,7 +66,7 @@ public class AudioFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        //init button
+        //startSendH264 button
         sendBtn = (Button)getActivity().findViewById(R.id.sendAudio);
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -122,7 +122,7 @@ public class VideoActivity1 extends Activity{
             {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSes) {
-                    // init preview
+                    // startSendH264 preview
                     cameraCaptureSession = cameraCaptureSes;
                     try {
                         // 自动对焦

@@ -1,30 +1,32 @@
-package com.example.deonew.car.Video;
+package com.example.deonew.car.Audio;
 
 import android.util.Log;
 
-import com.example.deonew.car.VideoActivity2;
+import com.example.deonew.car.Video.SendH264;
+import com.example.deonew.car.Audio.AudioActivity2;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 
 /**
- * Created by deonew on 4/13/17.
+ * Created by deonew on 4/14/17.
  */
 
-public class SendH264 {
-    private VideoActivity2 mainAC;
+public class SendAAC {
+
+    private AudioActivity2 mainAC;
     private Socket send;
     private OutputStream sendStream;
 
-    public SendH264(VideoActivity2 v){
+    public SendAAC(AudioActivity2 v){
         this.mainAC = v;
     }
-    public void startSendH264(){
-        new sendSocket().start();
+    public void startSendAAC(){
+        new sendAACSocket().start();
     }
     //get data frome queue
-    private class sendSocket extends Thread{
+    private class sendAACSocket extends Thread{
         @Override
         public void run() {
             super.run();
@@ -37,18 +39,12 @@ public class SendH264 {
 
 
             while(true){
-                if (!mainAC.getH264SendQueue().isEmpty()){
-                    //
-                    Log.d("H264","get one");
-
-                    //test
-//                    byte[] b = new byte[3];
-//                    b[0] = b[1]= b[2] = 'c';
+                if (!mainAC.getAACSendQueue().isEmpty()){
+                    Log.d("aac","get one");
                     try{
-                    //maybe wrong
-                        byte[] tmp = (byte[])mainAC.getH264SendQueue().poll();
+                        //maybe wrong
+                        byte[] tmp = (byte[])mainAC.getAACSendQueue().poll();
                         if (sendStream != null){
-//                            sendStream.write(b);
                             sendStream.write(tmp);
                             sendStream.flush();
                         }
@@ -61,7 +57,4 @@ public class SendH264 {
             }
         }
     }
-
-
 }
-

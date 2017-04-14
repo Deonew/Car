@@ -34,12 +34,10 @@
             </intent-filter>
         </activity>
         <!--audio-->
-        <activity android:name=".AudioActivity"/>
         <!--<activity android:name=".AudioActivity1"/>-->
         <activity android:name=".Audio.AudioActivity2"/>
 
         <!--video-->
-        <activity android:name=".VideoActivity"/>
         <activity android:name=".VideoActivity1"/>
         <activity android:name=".VideoActivity2"/>
 

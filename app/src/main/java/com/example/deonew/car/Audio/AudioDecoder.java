@@ -84,9 +84,6 @@ public class AudioDecoder {
         private InputStream fis = null;
         private String audioPath = Environment.getExternalStorageDirectory() + "/carTemp.aac";
         public boolean prepare() {
-//            try{
-//                fis = new FileInputStream(new File(audioPath));
-//            }catch (IOException e){}
             // 等待客户端
             miniBuffSize= AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat)*2;
             mPlayer = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConf, audioFormat, miniBuffSize, AudioTrack.MODE_STREAM);
@@ -128,14 +125,11 @@ public class AudioDecoder {
         }
 
         public void decode() {
-            ByteBuffer[] codecInputBuffers = mDecoder.getInputBuffers();
-            ByteBuffer[] codecOutputBuffers = mDecoder.getOutputBuffers();
 
             final long kTimeOutUs = 5000;
             MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
             boolean sawInputEOS = false;
             boolean sawOutputEOS = false;
-            int totalRawSize = 0;
             try {
                 while (!sawOutputEOS) {
                     if (!sawInputEOS) {
@@ -144,15 +138,11 @@ public class AudioDecoder {
                         int inputBufIndex = mDecoder.dequeueInputBuffer(kTimeOutUs);
                         if (inputBufIndex >= 0) {
                             Log.d(TAG,"input available");
-                            ByteBuffer dstBuf = codecInputBuffers[inputBufIndex];
-//                            int sampleSize = extractor.readSampleData(dstBuf, 0);//get data
+                            ByteBuffer dstBuf = mDecoder.getInputBuffer(inputBufIndex);
+//                            int sampleSize = extractor.readSampleData(dstBuf, 0);//get data from extractor
 
                             byte[] b =getOneNalu();
-//                            for (int t =0;t<b.length;t++){
-//                                Log.d(TAG,b[t]+"");
-//                            }
                             dstBuf.put(b);
-
                             int sampleSize = b.length;
 
                             // -1 means no more availalbe
@@ -161,48 +151,45 @@ public class AudioDecoder {
                                 mDecoder.queueInputBuffer(inputBufIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                             } else {
 //                                mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, System.nanoTime()/1000, 0);
-
                                 long presentationTimeUs = extractor.getSampleTime();
                                 mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, presentationTimeUs, 0);
-                                extractor.advance();
+//                                extractor.advance();
                             }
                         }
                     }
 
-                    int res = mDecoder.dequeueOutputBuffer(info, kTimeOutUs);
-                    if (res >= 0) {
+                    int outputBufferIndex = mDecoder.dequeueOutputBuffer(info, kTimeOutUs);
+                    if (outputBufferIndex >= 0) {
                         Log.d(TAG,"output available");
-
-                        int outputBufIndex = res;
                         // Simply ignore codec config buffers.
                         if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
 //                            Log.i("TAG", "audio encoder: codec config buffer");
-                            mDecoder.releaseOutputBuffer(outputBufIndex, false);
+                            mDecoder.releaseOutputBuffer(outputBufferIndex, false);
                             continue;
                         }
                         if (info.size != 0) {
-                            ByteBuffer outBuf = codecOutputBuffers[outputBufIndex];
+                            ByteBuffer outBuf = mDecoder.getOutputBuffer(outputBufferIndex);//new api
+
                             outBuf.position(info.offset);
                             outBuf.limit(info.offset + info.size);
                             byte[] data = new byte[info.size];
                             outBuf.get(data);
-                            totalRawSize += data.length;
                             mPlayer.write(data, 0, info.size);
                         }
-                        mDecoder.releaseOutputBuffer(outputBufIndex, false);
+                        mDecoder.releaseOutputBuffer(outputBufferIndex, false);
                         if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                             sawOutputEOS = true;
                         }
-                    } else if (res == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
-                        codecOutputBuffers = mDecoder.getOutputBuffers();
-                    } else if (res == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    }
+                    else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                         MediaFormat oformat = mDecoder.getOutputFormat();
-                    }else if(res == INFO_TRY_AGAIN_LATER){
+                    }
+                    //dequeueOutputBuffer time over, time = kTimeOutUs
+                    else if(outputBufferIndex == INFO_TRY_AGAIN_LATER){
 
                     }
                 }
             } finally {
-                // fosDecoder.close();
                 extractor.release();
             }
         }
@@ -234,7 +221,6 @@ public class AudioDecoder {
     private byte[] currentBuff = new byte[10240];
     private int currentBuffStart = 0;//valid data start
     private int currentBuffEnd = 0;
-//    private Queue<byte[]> q = new LinkedList<byte[]>();
     private BlockingQueue<byte[]> q = new ArrayBlockingQueue<byte[]>(10000);
     public void readFile(){
         try{

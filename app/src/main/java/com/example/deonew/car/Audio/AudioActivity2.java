@@ -21,6 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by deonew on 4/11/17.
@@ -32,7 +34,7 @@ public class AudioActivity2 extends Activity{
     private String audioPath = Environment.getExternalStorageDirectory() + "/carTemp.aac";
 
     private AudioRecord mAudioRec;
-    //for init
+    //for startSendH264
     private int sampleRate = 44100;
     private int channelCount = 2;
     //stereo
@@ -102,10 +104,10 @@ public class AudioActivity2 extends Activity{
     private InputStream audioFis = null;
     public void initAudioRec(){
         miniBuffSize = AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat)*2;
-        //init mAudioRec according to minibuff and given conf
+        //startSendH264 mAudioRec according to minibuff and given conf
         mAudioRec = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConf, audioFormat, miniBuffSize);
 
-        //init fos
+        //startSendH264 fos
         File file=new File(audioPath);
         if (file.exists()){
 //            file.delete();
@@ -153,10 +155,15 @@ public class AudioActivity2 extends Activity{
             MediaCodec.BufferInfo buInfo = new MediaCodec.BufferInfo();
             int outputBuffIndex =mAudioCodec.dequeueOutputBuffer(buInfo,0);
 
-            if (outputBuffIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
-            }else if(outputBuffIndex == MediaCodec.INFO_TRY_AGAIN_LATER){
+            if (outputBuffIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED)
+            {
+            }
+            else if(outputBuffIndex == MediaCodec.INFO_TRY_AGAIN_LATER)
+            {
 
-            }else{
+            }
+            else
+            {
                 while(outputBuffIndex>=0){
                     ByteBuffer bybuOut = mAudioCodec.getOutputBuffer(outputBuffIndex);
 
@@ -181,7 +188,11 @@ public class AudioActivity2 extends Activity{
                     //write data
                     try{
                         audioFos.write(encodedData,0,encodedData.length);
-                        //send
+
+                        //put data to ethe queue
+                        offerVideoQueue(encodedData);
+
+
                     }catch (IOException e){}
                     //continue circle
                     mAudioCodec.releaseOutputBuffer(outputBuffIndex,false);
@@ -189,6 +200,33 @@ public class AudioActivity2 extends Activity{
                 }
             }
     }
+
+
+    private BlockingQueue<byte[]> AACSendQueue = new ArrayBlockingQueue<byte[]>(10000);
+
+    public BlockingQueue getAACSendQueue(){
+        return AACSendQueue;
+    }
+    public void offerVideoQueue(byte[] b){
+        int n = b.length/1000;
+        for(int i = 0;i< n+1;i++){
+            int len = 1000;
+            if (i == n){
+                len = b.length - i*1000;
+            }
+
+            //b.length = 1000,2000
+            if (len == 0)
+                break;
+
+            byte[] tmp = new byte[len];
+            System.arraycopy(b,i*1000,tmp,0,len);
+            getAACSendQueue().offer(tmp);
+            i++;
+        }
+    }
+
+
 }
 
 

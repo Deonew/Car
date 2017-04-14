@@ -54,7 +54,7 @@ public class TextFragment extends Fragment{
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //init component
+        //startSendH264 component
         initComponent();
 
         //send thread

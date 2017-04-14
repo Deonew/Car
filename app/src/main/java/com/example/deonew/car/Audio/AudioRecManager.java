@@ -24,7 +24,7 @@ public class AudioRecManager {
     //instance
     private AudioRecord mAudioRec;
 
-    //for init
+    //for startSendH264
     private int sampleRate = 44100;
     private int channelCount = 2;
     //stereo
@@ -53,15 +53,15 @@ public class AudioRecManager {
     //get main activity
     private VideoActivity2 mVideoActivity2;
     public void initAudioRecManager(VideoActivity2 vac2){
-        //init
+        //startSendH264
         // get minibuff according to given conf
         miniBuffSize = AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat)*2;
-        //init mAudioRec according to minibuff and given conf
+        //startSendH264 mAudioRec according to minibuff and given conf
         mAudioRec = new AudioRecord(MediaRecorder.AudioSource.MIC,sampleRate,channelConf,audioFormat,miniBuffSize);
         mVideoActivity2 = vac2;
     }
     public void initAudioFos(){
-        //init fos
+        //startSendH264 fos
         File file=new File(audioPath);
         if (file.exists()){
             file.delete();
@@ -70,7 +70,7 @@ public class AudioRecManager {
             fos = new FileOutputStream(audioPath,true);
         }catch(FileNotFoundException e){}
     }
-    //init codec
+    //startSendH264 codec
     public void initAudioCodec(){
         //codec config
         MediaFormat f = MediaFormat.createAudioFormat("audio/mp4a-latm",sampleRate,channelCount);
@@ -88,7 +88,7 @@ public class AudioRecManager {
     public void startAudioRec(){
         mAudioRec.startRecording();
 
-        //init thread
+        //startSendH264 thread
         mDataCatchThread = new Thread(new dataCatch());
         mDataCatchThread.start();
 

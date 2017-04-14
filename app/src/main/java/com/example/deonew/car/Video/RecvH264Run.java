@@ -31,7 +31,7 @@ public class RecvH264Run implements Runnable {
     @Override
     public void run() {
         Looper.prepare();
-        //init handler to recv command from ui thread
+        //startSendH264 handler to recv command from ui thread
         mRecUIHandler = new Handler(){
             @Override
             public void handleMessage(Message msg) {
