@@ -15,6 +15,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
+import static android.media.MediaCodec.INFO_TRY_AGAIN_LATER;
 
 public class AudioDecoder {
 
@@ -25,6 +31,7 @@ public class AudioDecoder {
 
     public AudioDecoder(String filename) {
         this.path = filename;
+        readFile();
     }
 
     public void start() {
@@ -42,6 +49,7 @@ public class AudioDecoder {
         }
 
     }
+
 
     private class Worker extends Thread {
         private static final int KEY_SAMPLE_RATE = 0;
@@ -61,6 +69,7 @@ public class AudioDecoder {
                 isRunning = false;
             }
             while (isRunning) {
+                Log.d("aaaaaaaaa","decode");
                 decode();
             }
             release();
@@ -111,6 +120,7 @@ public class AudioDecoder {
                 return false;
             }
             if (mDecoder == null) {
+                Log.d("aaaaaaaaaaaaaaaaaa","decoder failed");
                 return false;
             }
             mDecoder.start();
@@ -130,31 +140,20 @@ public class AudioDecoder {
                 while (!sawOutputEOS) {
                     if (!sawInputEOS) {
 
+                        Log.d("aaaaaaaaaaaaaaa","start put data");
                         int inputBufIndex = mDecoder.dequeueInputBuffer(kTimeOutUs);
                         if (inputBufIndex >= 0) {
+                            Log.d(TAG,"input available");
                             ByteBuffer dstBuf = codecInputBuffers[inputBufIndex];
-                            int sampleSize = extractor.readSampleData(dstBuf, 0);//get data
-                            Log.d(TAG,"取出一帧");//fff9 5080
-                            byte [] content = new byte[dstBuf.limit()];
-                            dstBuf.get(content);
-                            for (int t = 0 ;t< content.length;t++){
-                                Log.d(TAG,Integer.toHexString(content[t])+"one");
-                            }
-                            Log.d(TAG,"取出一帧完毕");
-                            //从文件流读取byte数组
-//                            byte[] b = new byte[miniBuffSize];
-//                            byte[] b = new byte[miniBuffSize];
-//                            int sampleSize = 0;
-//                            try{
-//                                sampleSize= fis.read(b);
-//                            }catch (IOException e){}
-//                            dstBuf.put(b);
+//                            int sampleSize = extractor.readSampleData(dstBuf, 0);//get data
 
-//                            dstBuf = ByteBuffer.wrap(b);
+                            byte[] b =getOneNalu();
+//                            for (int t =0;t<b.length;t++){
+//                                Log.d(TAG,b[t]+"");
+//                            }
+                            dstBuf.put(b);
 
-                            //failed
-
-
+                            int sampleSize = b.length;
 
                             // -1 means no more availalbe
                             if (sampleSize < 0) {
@@ -169,8 +168,10 @@ public class AudioDecoder {
                             }
                         }
                     }
+
                     int res = mDecoder.dequeueOutputBuffer(info, kTimeOutUs);
                     if (res >= 0) {
+                        Log.d(TAG,"output available");
 
                         int outputBufIndex = res;
                         // Simply ignore codec config buffers.
@@ -196,6 +197,8 @@ public class AudioDecoder {
                         codecOutputBuffers = mDecoder.getOutputBuffers();
                     } else if (res == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                         MediaFormat oformat = mDecoder.getOutputFormat();
+                    }else if(res == INFO_TRY_AGAIN_LATER){
+
                     }
                 }
             } finally {
@@ -223,5 +226,76 @@ public class AudioDecoder {
 
 
 
+    }
+
+
+
+    private FileInputStream fis = null;
+    private byte[] currentBuff = new byte[10240];
+    private int currentBuffStart = 0;//valid data start
+    private int currentBuffEnd = 0;
+//    private Queue<byte[]> q = new LinkedList<byte[]>();
+    private BlockingQueue<byte[]> q = new ArrayBlockingQueue<byte[]>(10000);
+    public void readFile(){
+        try{
+            fis = new FileInputStream(this.path);
+            int hhh = 0;
+            do{
+                //new every time
+                byte[] i = new byte[1024];
+                hhh = fis.read(i);
+                q.offer(i);
+            }while(hhh != -1);
+        }catch (IOException e) {}
+    }
+    public byte[] getOneNalu(){
+        int n = getNextIndex();
+        if (n == -1) {
+            return null;
+        }
+        System.out.println(n);
+        byte[] naluu = new byte[n-currentBuffStart];
+        System.arraycopy(currentBuff, currentBuffStart, naluu, 0, n-currentBuffStart);
+        System.arraycopy(currentBuff, n, currentBuff, 0, currentBuff.length - n);
+        currentBuffStart = 0;
+        currentBuffEnd = currentBuffEnd - naluu.length;
+        return naluu;
+    }
+    private int nextNaluHead = -1;
+    public int getNextIndex(){
+        nextNaluHead = getNextIndexOnce();
+        while(nextNaluHead == -1) {
+            if (!q.isEmpty()) {
+                byte[] tmp = q.poll();
+                System.arraycopy(tmp,0,currentBuff,currentBuffEnd,tmp.length);
+                currentBuffEnd = currentBuffEnd + tmp.length;
+                nextNaluHead = getNextIndexOnce();
+            }else{
+                return -1;
+            }
+        }
+        nextNaluHead = nextNaluHead - 3;
+        return nextNaluHead;
+    }
+    public int getNextIndexOnce(){
+        int nextIndex = -1;
+        ByteBuffer b = ByteBuffer.allocate(4);
+        b.putInt(0xfff95080);
+        byte[] naluHead = b.array();
+        int i = 0;
+        int index = 0;
+        for(i = currentBuffStart+2; i < currentBuffEnd;i++){
+            while (index > 0 && currentBuff[i] != naluHead[index]) {
+                index = 0;
+            }
+            if (currentBuff[i] == naluHead[index]) {
+                index++;
+                if (index == 4){
+                    nextIndex = i;
+                    break;
+                }
+            }
+        }
+        return nextIndex;
     }
 }

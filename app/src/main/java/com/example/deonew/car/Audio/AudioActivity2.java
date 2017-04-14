@@ -9,6 +9,7 @@ import android.media.MediaFormat;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 
 import com.example.deonew.car.R;
@@ -77,6 +78,7 @@ public class AudioActivity2 extends Activity{
     }
 
     public void playAudio(View v){
+        Log.d("aaaaaaaaaaaaaaaaaa","play aac");
         //play
         String fielPath = (Environment.getExternalStorageDirectory().getPath() + "/carTemp.aac");
         AudioDecoder audioDecoder = new AudioDecoder(fielPath);
@@ -157,9 +159,6 @@ public class AudioActivity2 extends Activity{
             }else{
                 while(outputBuffIndex>=0){
                     ByteBuffer bybuOut = mAudioCodec.getOutputBuffer(outputBuffIndex);
-                    //mux audio
-//                    buInfo.presentationTimeUs = System.nanoTime() / 1000L;
-//                    mMuxer.writeSampleData(mAudioTrackIndex,bybuOut,buInfo);
 
                     //encodedData receive data from buffer
                     byte[] encodedData = new byte[buInfo.size+7];

@@ -54,16 +54,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button btnArStart, btnArStop;
 
     CarThread carThread;
-
-
     private Thread mAudioSendTH = null;
-
     private MainViewPagerAdapter mainViewPagerAdapter;
-
-
     private static final String TAG = MainActivity.class.getSimpleName();
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

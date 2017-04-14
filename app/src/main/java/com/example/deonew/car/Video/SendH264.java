@@ -34,7 +34,7 @@ public class SendH264 {
 
             try{
 //                send = new Socket("10.105.36.224",8888);
-                send = new Socket("10.1.1.1",8888);
+                send = new Socket("10.1.1.1",8888);//obu
                 sendStream = send.getOutputStream();
             }catch (IOException e){}
 
@@ -44,10 +44,14 @@ public class SendH264 {
                     //
                     Log.d("H264","get one");
 
+                    //test
+//                    byte[] b = new byte[3];
+//                    b[0] = b[1]= b[2] = 'c';
                     try{
                     //maybe wrong
                         byte[] tmp = (byte[])mainAC.getVideoSendQueue().poll();
                         if (sendStream != null){
+//                            sendStream.write(b);
                             sendStream.write(tmp);
                             sendStream.flush();
                         }

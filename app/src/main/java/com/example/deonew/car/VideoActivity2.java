@@ -1256,39 +1256,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
             //test
     }
-//    public void startAudioRec(View v){
-//
-//        mAudioRec.startRecording();
-//        //audio init thread
-//        mAudioDataCatchThread = new Thread(new audioDataCatch());
-//        mAudioDataCatchThread.init();
-//
-//        isAudioRecording = true;
-//
-//        //show msg
-//        audioStatus.setText("audio is rec...");
-//    }
-//    public void stopAudioRec(View v){
-//        isAudioRecording = false;
-//        audioStatus.setText("audio not rec...");
-//    }
-//    public void startVideoRec(View v){
-//        isVideoRec = true;
-//        videoStatus.setText("video is rec...");
-//    }
-//    public void stopVideoRec(View v){
-//        isVideoRec = false;
-//        videoStatus.setText("video not rec...");
-//    }
-//    public void startMux(View v){
-////        mMuxer.init();
-//        isMuxering = true;
-//        muxStatus.setText("muxing...");
-//    }
-//    public void stopMux(View v){
-//        isMuxering = false;
-//        muxStatus.setText("not muxing...");
-//    }
 
     public void toggleAudioRec(View v){
 //        isAudioRecording = !isAudioRecording;
