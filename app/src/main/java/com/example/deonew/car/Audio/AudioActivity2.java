@@ -51,7 +51,6 @@ public class AudioActivity2 extends Activity{
     //audio encode
     private MediaCodec mAudioCodec;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,7 +62,11 @@ public class AudioActivity2 extends Activity{
         //new
         initAudioRec();
 
-        //thread
+        //recv thread
+        RecvAAC recvAAC = new RecvAAC(this);
+//        recvAAC.init();
+
+        SendAAC sendAAC = new SendAAC(this);
     }
 
 
@@ -80,11 +83,15 @@ public class AudioActivity2 extends Activity{
     }
 
     public void playAudio(View v){
-        Log.d("aaaaaaaaaaaaaaaaaa","play aac");
+//        Log.d("aaaaaaaaaaaaaaaaaa","play aac");
         //play
-        String fielPath = (Environment.getExternalStorageDirectory().getPath() + "/carTemp.aac");
-        AudioDecoder audioDecoder = new AudioDecoder(fielPath);
+//        String fielPath = (Environment.getExternalStorageDirectory().getPath() + "/carTemp.aac");
+//        AACDecoder audioDecoder = new AACDecoder(fielPath);
+
+
+        AACDecoder audioDecoder = new AACDecoder(this);
         audioDecoder.start();
+
     }
 
     private boolean isSend = false;
@@ -190,7 +197,7 @@ public class AudioActivity2 extends Activity{
                         audioFos.write(encodedData,0,encodedData.length);
 
                         //put data to ethe queue
-                        offerVideoQueue(encodedData);
+                        offerAudioQueue(encodedData);
 
 
                     }catch (IOException e){}
@@ -207,18 +214,15 @@ public class AudioActivity2 extends Activity{
     public BlockingQueue getAACSendQueue(){
         return AACSendQueue;
     }
-    public void offerVideoQueue(byte[] b){
+    public void offerAudioQueue(byte[] b){
         int n = b.length/1000;
         for(int i = 0;i< n+1;i++){
             int len = 1000;
             if (i == n){
                 len = b.length - i*1000;
             }
-
-            //b.length = 1000,2000
             if (len == 0)
                 break;
-
             byte[] tmp = new byte[len];
             System.arraycopy(b,i*1000,tmp,0,len);
             getAACSendQueue().offer(tmp);
@@ -227,6 +231,26 @@ public class AudioActivity2 extends Activity{
     }
 
 
+    //---------------------------------------------------aac recv
+    private BlockingQueue<byte[]> AACRecvQueue = new ArrayBlockingQueue<byte[]>(10000);
+    public BlockingQueue<byte[]> getAACRecvQueue() {
+        return AACRecvQueue;
+    }
+    public void offerAudioRecvQueue(byte[] b){
+        int n = b.length/1000;
+        for(int i = 0;i< n+1;i++){
+            int len = 1000;
+            if (i == n){
+                len = b.length - i*1000;
+            }
+            if (len == 0)
+                break;
+            byte[] tmp = new byte[len];
+            System.arraycopy(b,i*1000,tmp,0,len);
+            getAACRecvQueue().offer(tmp);
+            i++;
+        }
+    }
 }
 
 

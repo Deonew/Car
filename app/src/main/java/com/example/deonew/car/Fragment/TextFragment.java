@@ -1,8 +1,7 @@
-package com.example.deonew.car.Text;
+package com.example.deonew.car.Fragment;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -14,11 +13,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.example.deonew.car.MainActivity;
 import com.example.deonew.car.R;
-import com.example.deonew.car.VideoActivity2;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;

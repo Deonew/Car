@@ -1,14 +1,7 @@
-package com.example.deonew.car;
+package com.example.deonew.car.Fragment;
 
 import android.content.Intent;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
-import android.media.MediaCodec;
-import android.media.MediaCodecInfo;
-import android.media.MediaFormat;
-import android.media.MediaRecorder;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -17,12 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.example.deonew.car.Audio.AudioActivity2;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import com.example.deonew.car.R;
 
 /**
  * Created by deonew on 17-4-4.

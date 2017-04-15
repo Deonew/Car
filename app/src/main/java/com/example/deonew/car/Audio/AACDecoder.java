@@ -10,28 +10,29 @@ import android.media.MediaFormat;
 import android.os.Environment;
 import android.util.Log;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import static android.media.MediaCodec.INFO_TRY_AGAIN_LATER;
 
-public class AudioDecoder {
+public class AACDecoder {
 
-    private static final String TAG = "AudioDecoder";
+    private static final String TAG = "AACDecoder";
     public static final int KEY_CHANNEL_COUNT = 0;
     private Worker mWorker;
     private String path;//aac文件的路径。
 
-    public AudioDecoder(String filename) {
+    public AACDecoder(String filename) {
         this.path = filename;
         readFile();
+    }
+    AudioActivity2 mAudioAC = null;
+    public AACDecoder(AudioActivity2 ac) {
+        mAudioAC = ac;
     }
 
     public void start() {
@@ -84,34 +85,42 @@ public class AudioDecoder {
         private InputStream fis = null;
         private String audioPath = Environment.getExternalStorageDirectory() + "/carTemp.aac";
         public boolean prepare() {
-            // 等待客户端
+
             miniBuffSize= AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat)*2;
             mPlayer = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConf, audioFormat, miniBuffSize, AudioTrack.MODE_STREAM);
             mPlayer.play();
             try {
-                mDecoder = MediaCodec.createDecoderByType("audio/mp4a-latm");
 
-                final String encodeFile = path;
-                extractor = new MediaExtractor();
-                extractor.setDataSource(encodeFile);
+                mDecoder = MediaCodec.createDecoderByType("audio/mp4a-latm");
+//
+//                final String encodeFile = path;
+//                extractor = new MediaExtractor();
+//                extractor.setDataSource(encodeFile);
 
                 MediaFormat mediaFormat = null;
-                for (int i = 0; i < extractor.getTrackCount(); i++) {
-                    MediaFormat format = extractor.getTrackFormat(i);
-                    String mime = format.getString(MediaFormat.KEY_MIME);
-                    if (mime.startsWith("audio/")) {
-                        extractor.selectTrack(i);
-                        mediaFormat = format;
-                        break;
-                    }
-                }
+//                for (int i = 0; i < extractor.getTrackCount(); i++) {
+//                    MediaFormat format = extractor.getTrackFormat(i);
+//                    String mime = format.getString(MediaFormat.KEY_MIME);
+//                    if (mime.startsWith("audio/")) {
+//                        extractor.selectTrack(i);
+//                        mediaFormat = format;
+//                        break;
+//                    }
+//                }
+
+//                Log.d("aaaaaaaaaaaaaa","media config");
+
+                mediaFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", 44100,2);
                 mediaFormat.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
-                mediaFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, KEY_CHANNEL_COUNT);
-                mediaFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, KEY_SAMPLE_RATE);
-                mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 24000);
+                //adts header
                 mediaFormat.setInteger(MediaFormat.KEY_IS_ADTS, 1);
-                mediaFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, 0);
+                //csd-0
+//                mediaFormat.setByteBuffer("csd-0", ByteBuffer.allocate(2).put(new byte[]{(byte) 0x11, (byte)0x90}));
+                byte[] bytes = new byte[]{(byte) 0x11, (byte)0x90};
+                ByteBuffer bb = ByteBuffer.wrap(bytes);
+                mediaFormat.setByteBuffer("csd-0", bb);
                 mDecoder.configure(mediaFormat, null, null, 0);
+
             } catch (IOException e) {
                 e.printStackTrace();
                 return false;
@@ -141,7 +150,8 @@ public class AudioDecoder {
                             ByteBuffer dstBuf = mDecoder.getInputBuffer(inputBufIndex);
 //                            int sampleSize = extractor.readSampleData(dstBuf, 0);//get data from extractor
 
-                            byte[] b =getOneNalu();
+                            //put a frame of audio file!!!!!!!!!!!!!!!
+                            byte[] b = getOneAACFrame();
                             dstBuf.put(b);
                             int sampleSize = b.length;
 
@@ -150,14 +160,13 @@ public class AudioDecoder {
                                 sawInputEOS = true;
                                 mDecoder.queueInputBuffer(inputBufIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                             } else {
-//                                mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, System.nanoTime()/1000, 0);
-                                long presentationTimeUs = extractor.getSampleTime();
-                                mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, presentationTimeUs, 0);
+                                mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, System.nanoTime()/1000, 0);
+//                                long presentationTimeUs = extractor.getSampleTime();
+//                                mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, presentationTimeUs, 0);
 //                                extractor.advance();
                             }
                         }
                     }
-
                     int outputBufferIndex = mDecoder.dequeueOutputBuffer(info, kTimeOutUs);
                     if (outputBufferIndex >= 0) {
                         Log.d(TAG,"output available");
@@ -179,6 +188,7 @@ public class AudioDecoder {
                         mDecoder.releaseOutputBuffer(outputBufferIndex, false);
                         if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                             sawOutputEOS = true;
+                            Log.d("aaaaaaaaaaaaaa","end");
                         }
                     }
                     else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
@@ -190,7 +200,7 @@ public class AudioDecoder {
                     }
                 }
             } finally {
-                extractor.release();
+//                extractor.release();
             }
         }
 
@@ -205,18 +215,8 @@ public class AudioDecoder {
                 mPlayer.release();
                 mPlayer = null;
             }
-            if (extractor != null) {
-                extractor.release();
-                extractor = null;
-            }
         }
-
-
-
     }
-
-
-
     private FileInputStream fis = null;
     private byte[] currentBuff = new byte[10240];
     private int currentBuffStart = 0;//valid data start
@@ -234,12 +234,12 @@ public class AudioDecoder {
             }while(hhh != -1);
         }catch (IOException e) {}
     }
-    public byte[] getOneNalu(){
+    public byte[] getOneAACFrame(){
         int n = getNextIndex();
         if (n == -1) {
             return null;
         }
-        System.out.println(n);
+//        System.out.println(n);
         byte[] naluu = new byte[n-currentBuffStart];
         System.arraycopy(currentBuff, currentBuffStart, naluu, 0, n-currentBuffStart);
         System.arraycopy(currentBuff, n, currentBuff, 0, currentBuff.length - n);
@@ -247,22 +247,23 @@ public class AudioDecoder {
         currentBuffEnd = currentBuffEnd - naluu.length;
         return naluu;
     }
-    private int nextNaluHead = -1;
+    private int nextAACHead = -1;
     public int getNextIndex(){
-        nextNaluHead = getNextIndexOnce();
-        while(nextNaluHead == -1) {
-            if (!q.isEmpty()) {
-                byte[] tmp = q.poll();
+        nextAACHead = getNextIndexOnce();
+        while(nextAACHead == -1) {
+            if (!mAudioAC.getAACRecvQueue().isEmpty()) {
+                byte[] tmp = mAudioAC.getAACRecvQueue().poll();
                 System.arraycopy(tmp,0,currentBuff,currentBuffEnd,tmp.length);
                 currentBuffEnd = currentBuffEnd + tmp.length;
-                nextNaluHead = getNextIndexOnce();
+                nextAACHead = getNextIndexOnce();
             }else{
                 return -1;
             }
         }
-        nextNaluHead = nextNaluHead - 3;
-        return nextNaluHead;
+        nextAACHead = nextAACHead - 3;
+        return nextAACHead;
     }
+
     public int getNextIndexOnce(){
         int nextIndex = -1;
         ByteBuffer b = ByteBuffer.allocate(4);

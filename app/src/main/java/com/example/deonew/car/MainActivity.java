@@ -1,42 +1,15 @@
 package com.example.deonew.car;
 
 import android.content.Context;
-import android.content.Intent;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
-import android.media.MediaRecorder;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 
-import com.example.deonew.car.Audio.AudioSendRun;
-
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity{
@@ -103,10 +76,6 @@ public class MainActivity extends AppCompatActivity{
         int ipInt = wifiInfo.getIpAddress();
         String ipString = intToIp(ipInt);
         return ipString;
-//        (String)ip = ip.toString();
-//        String ipString = intToIp(ip);
-        //test
-//        testView.setText(ip);
     }
 
     private String intToIp(int i) {
