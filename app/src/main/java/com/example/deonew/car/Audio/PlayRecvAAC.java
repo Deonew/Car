@@ -19,19 +19,19 @@ import java.util.concurrent.BlockingQueue;
 
 import static android.media.MediaCodec.INFO_TRY_AGAIN_LATER;
 
-public class AACDecoder {
+public class PlayRecvAAC {
 
-    private static final String TAG = "AACDecoder";
+    private static final String TAG = "PlayRecvAAC";
     public static final int KEY_CHANNEL_COUNT = 0;
     private Worker mWorker;
     private String path;//aac文件的路径。
 
-    public AACDecoder(String filename) {
+    public PlayRecvAAC(String filename) {
         this.path = filename;
         readFile();
     }
     AudioActivity2 mAudioAC = null;
-    public AACDecoder(AudioActivity2 ac) {
+    public PlayRecvAAC(AudioActivity2 ac) {
         mAudioAC = ac;
     }
 
@@ -92,23 +92,10 @@ public class AACDecoder {
             try {
 
                 mDecoder = MediaCodec.createDecoderByType("audio/mp4a-latm");
-//
-//                final String encodeFile = path;
-//                extractor = new MediaExtractor();
-//                extractor.setDataSource(encodeFile);
+
 
                 MediaFormat mediaFormat = null;
-//                for (int i = 0; i < extractor.getTrackCount(); i++) {
-//                    MediaFormat format = extractor.getTrackFormat(i);
-//                    String mime = format.getString(MediaFormat.KEY_MIME);
-//                    if (mime.startsWith("audio/")) {
-//                        extractor.selectTrack(i);
-//                        mediaFormat = format;
-//                        break;
-//                    }
-//                }
 
-//                Log.d("aaaaaaaaaaaaaa","media config");
 
                 mediaFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", 44100,2);
                 mediaFormat.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
@@ -161,9 +148,6 @@ public class AACDecoder {
                                 mDecoder.queueInputBuffer(inputBufIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
                             } else {
                                 mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, System.nanoTime()/1000, 0);
-//                                long presentationTimeUs = extractor.getSampleTime();
-//                                mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, presentationTimeUs, 0);
-//                                extractor.advance();
                             }
                         }
                     }

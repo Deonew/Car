@@ -15,18 +15,14 @@
             android:id="@+id/toggleVideoRec"
             android:text="toggleVideoRec"
             android:onClick="toggleVideoRec"/>
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/toggleAudioRec"
             android:text="toggleAudioRec"
             android:onClick="toggleAudioRec"/>
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/toggleMux"
-            android:text="toggleMux"
-            android:onClick="toggleMux"/>
+
     </LinearLayout>
     <LinearLayout
         android:layout_width="wrap_content"
@@ -50,29 +46,6 @@
             android:text="playRecvH264"
             android:onClick="playRecvH264"/>
     </LinearLayout>
-    <!--<LinearLayout-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content">-->
-        <!--<Button-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:id="@+id/stopVideoRec"-->
-            <!--android:text="stopVideoRec"-->
-            <!--android:onClick="stopVideoRec"/>-->
-
-        <!--<Button-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:id="@+id/stopAudioRec"-->
-            <!--android:text="stopAudioRec"-->
-            <!--android:onClick="stopAudioRec"/>-->
-        <!--<Button-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:id="@+id/stopMux"-->
-            <!--android:text="stopMux"-->
-            <!--android:onClick="stopMux"/>-->
-    <!--</LinearLayout>-->
 
 
     <LinearLayout
@@ -101,16 +74,11 @@
             android:id="@+id/ipinfo"/>
 
     </LinearLayout>
-    <!--<TextureView-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:id="@+id/preViewTextureView"/>-->
-
 
     <SurfaceView
         android:id="@+id/preview"
         android:layout_width="wrap_content"
-        android:layout_height="1080px" />
+        android:layout_height="500px" />
 
     <SurfaceView
         android:id="@+id/surface_view_camera2_activity"

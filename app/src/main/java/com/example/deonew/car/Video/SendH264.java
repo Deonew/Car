@@ -2,8 +2,6 @@ package com.example.deonew.car.Video;
 
 import android.util.Log;
 
-import com.example.deonew.car.VideoActivity2;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -19,6 +17,10 @@ public class SendH264 {
 
     public SendH264(VideoActivity2 v){
         this.mainAC = v;
+    }
+    private boolean isSendingH264 = false;
+    public void setSendH264Status(boolean value){
+        isSendingH264 = value;
     }
     public void startSendH264(){
         new sendSocket().start();
@@ -36,6 +38,7 @@ public class SendH264 {
             }catch (IOException e){}
 
 
+            Log.d("sssssssssssssssssssss","send");
             while(true){
                 if (!mainAC.getH264SendQueue().isEmpty()){
                     //

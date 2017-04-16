@@ -1,4 +1,4 @@
-package com.example.deonew.car;
+package com.example.deonew.car.Main;
 
 import android.content.Context;
 import android.net.wifi.WifiInfo;
@@ -8,6 +8,8 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+
+import com.example.deonew.car.R;
 
 import java.util.ArrayList;
 import java.util.List;

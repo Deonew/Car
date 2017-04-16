@@ -2,8 +2,6 @@ package com.example.deonew.car.Video;
 
 import android.util.Log;
 
-import com.example.deonew.car.VideoActivity2;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -18,12 +16,11 @@ public class RecvH264 {
         //
         mVideoAC = ac;
     }
-    public void init(){
+    public void startRecvH264(){
         //mediacodec
 
         //recv thread
         new recvSocketThread().start();
-        Log.d("sssssssssssssssss","11111111");
     }
 
     private boolean isRecv = false;
@@ -37,8 +34,8 @@ public class RecvH264 {
 //                recvSocket = new Socket("192.168.1.105",18888);
 //                        recvSocket = new Socket("10.1.1.1",8888);
                 Log.d("ssssssssssssssss","okay");
+                Log.d("ssssssssssssssss","okay");
                 InputStream ins = recvSocket.getInputStream();
-
                 mVideoAC.getH264RecvQueue().clear();
                 while(true){
                     while(isRecv){

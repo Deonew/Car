@@ -1,4 +1,4 @@
-package com.example.deonew.car;
+package com.example.deonew.car.Video;
 
 import android.Manifest;
 import android.app.Activity;
@@ -43,9 +43,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.deonew.car.Video.RecvH264;
-import com.example.deonew.car.Video.SendH264;
-import com.example.deonew.car.Video.sendH264Thread;
+import com.example.deonew.car.R;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -56,7 +54,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -101,7 +98,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private CameraDevice mCameraDevice;
 
     //video encode
-    private MediaCodec mVideoCodec;
+    private MediaCodec h264Encodec;
+
     String H264Path = Environment.getExternalStorageDirectory() + "/carTemp.h264";
     // write into file every frame
     private FileOutputStream H264fos;
@@ -141,11 +139,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private boolean isVideoRec = false;
     private Thread mVideoDataReadTH;
 
-    //muxer
-    private boolean isMuxering = false;//control
-    private MediaMuxer mMuxer;//instance
-    private String muxPath = Environment.getExternalStorageDirectory() + "/carTemp.mp4";
-
 
 
     //
@@ -155,13 +148,26 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         return H264SendQueue;
     }
 
-
-
     //
     private RecvH264 recvH264 = null;
 
 
+    private DecodeH264 decodeH264;
 
+
+
+    //-------------------------------aac receive
+    private BlockingQueue<byte[]> AACRecvQueue = new ArrayBlockingQueue<byte[]>(10000);
+    public BlockingQueue getAACRecvQueue(){
+        return AACRecvQueue;
+    }
+
+
+    //--------------------------------h264 receive
+    private BlockingQueue<byte[]> H264RecvQueue = new ArrayBlockingQueue<byte[]>(10000);
+    public BlockingQueue getH264RecvQueue(){
+        return H264RecvQueue;
+    }
 
 
     //debug
@@ -172,6 +178,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private TextView ipinfo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_video2);
 
@@ -182,6 +189,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         ipinfo = (TextView)findViewById(R.id.ipinfo);
 
 
+        Log.d(TAG,"11111111");
+
         sendH264Status.setText(H264Path);
 
         //get format
@@ -191,32 +200,28 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         //camera
         initView();
         //startSendH264 video codec
-        initVideoCodec();
-
+//        initVideoCodec();
 
         //startSendH264 file manager
-        File file=new File(H264Path);
-        //every time, create a new file
-        if (file.exists()){
-            file.delete();
-        }
-        try{
-            H264fos = new FileOutputStream(H264Path,true);
-        }catch (FileNotFoundException e){
-        }
-
-
+//        File file=new File(H264Path);
+//        //every time, create a new file
+//        if (file.exists()){
+//            file.delete();
+//        }
+//        try{
+//            H264fos = new FileOutputStream(H264Path,true);
+//        }catch (FileNotFoundException e){
+//        }
 
         sendH264 = new SendH264(this);
 
         recvH264 = new RecvH264(this);
-        recvH264.init();
-        Log.d("ssssssssssssss","recv h264");
+        Log.d(TAG,"11111111");
 
 
-        //not used
-//        mVideoDataReadTH = new Thread(new videoCodecRun());
-//        mVideoDataReadTH.startSendH264();
+//        mDecodeThread = new Thread(new decodeH264Thread());
+
+//        decodeH264 = new DecodeH264(this);
 
 //        startSendH264 read data
 //        isVideoRec = true;
@@ -229,14 +234,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
 
-//        initMuxer();
-        //startSendH264 muxer
-//        mMuxer.startSendH264();
-//
 //        initNImageReader();
 
-        //no tile
-//        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
 //        mAudioRecManager.startAudioRec();
 //        isVideoRec = true;
@@ -252,40 +251,15 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 //        initPlaySurfaceView();
 
-//        mSendH264Run.mRecUIHandler.sendEmptyMessage(0);
 
 //        mSurfaceView.setVisibility(View.INVISIBLE);//debug
 
-//        startSendH264(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
-//        mPlaySurface
 
 //        getIP();
+        initView();
 
-        //put data to queue
-//        putData();
-    }
-    public void putData(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File f = new File(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
-                DataInputStream testInput = null;
-                try {
-                    testInput = new DataInputStream(new FileInputStream(f));
-                    byte[] re = new byte[1024];
-                    while (testInput.read(re)!=-1){
-                        h264DataQueue.put(re);
-                    }
-                }
-                catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }catch (IOException e){}
-                catch (InterruptedException e){}
+        initVideoCodec();
 
-
-
-            }
-        }).start();
     }
 
     public void getIP(){
@@ -301,25 +275,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 ( ipAddress >> 24 & 0xFF);
         ipinfo.setText(ipString);
     }
-
-    private void initNImageReader() {
-        //        mNewImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(),
-//                ImageFormat.YV12, 2);
-//        mNewImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener(){
-//            @Override
-//            public void onImageAvailable(ImageReader reader) {
-//                Image image = reader.acquireLatestImage();
-//                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-//                //raw data
-//                byte[] data = new byte[buffer.remaining()];
-//                buffer.get(data);
-//                image.close();
-////                Toast.makeText(getApplicationContext(),"avail",Toast.LENGTH_SHORT).show();
-//            }
-//        },null);
-    }
-
-
 
 
     //--------------------------------audio
@@ -420,19 +375,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
 
-
-    private void initMuxer() {
-        File muxFile=new File(muxPath);
-        //every time, create a new mux file
-        if (muxFile.exists()){
-            muxFile.delete();
-        }
-        //
-        try{
-            mMuxer = new MediaMuxer(muxPath,MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-        }catch (IOException e){}
-//        mMuxer.startSendH264();
-    }
     public void addAudioTrack(){
 //        add audio track
 //        mAudioFormat = mAudioRecManager.getAudioCodecOutputFormat();
@@ -445,11 +387,11 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     public void initVideoCodec(){
         //asynchronous
 //        try{
-//            MediaCodec mVideoCodec = MediaCodec.createByCodecName("mycodec");
+//            MediaCodec h264Encodec = MediaCodec.createByCodecName("mycodec");
 //
 //        }catch(IOException e){}
 //        MediaFormat mOutPutF;
-//        mVideoCodec.setCallback(new MediaCodec.Callback(){
+//        h264Encodec.setCallback(new MediaCodec.Callback(){
 //            @Override
 //            public void onInputBufferAvailable(MediaCodec codec, int index) {
 //                //get the input buffer
@@ -483,10 +425,10 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //        mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 720*1280*5);
 //        mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
 //        mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
-//        mVideoCodec.configure(mediaFormat,null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-//        mOutPutF= mVideoCodec.getOutputFormat();
+//        h264Encodec.configure(mediaFormat,null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+//        mOutPutF= h264Encodec.getOutputFormat();
         //surface
-//        mMediaCodecSurface = mVideoCodec.createInputSurface();
+//        mMediaCodecSurface = h264Encodec.createInputSurface();
 //        mMediaCodecSurface.toString();
 
         MediaFormat mediaFormat = MediaFormat.createVideoFormat("video/avc", surfaceHeight, surfaceWidth);
@@ -497,10 +439,10 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 24);
         mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
         try{
-            mVideoCodec = MediaCodec.createEncoderByType("video/avc");
+            h264Encodec = MediaCodec.createEncoderByType("video/avc");
         }catch (IOException e){}
-        mVideoCodec.configure(mediaFormat,null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-        mVideoCodec.start();
+        h264Encodec.configure(mediaFormat,null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+        h264Encodec.start();
 
     }
 
@@ -882,24 +824,24 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
                     //add codec input buffer
                     //wait for 10 msec
-                    int iid = mVideoCodec.dequeueInputBuffer(100);
+                    int iid = h264Encodec.dequeueInputBuffer(100);
                     if (iid>=0){
                         //get the input buffer
-                        ByteBuffer iBuffer = mVideoCodec.getInputBuffer(iid);
+                        ByteBuffer iBuffer = h264Encodec.getInputBuffer(iid);
                         iBuffer.clear();
                         //our image data put into buffer
                         iBuffer.put(data);
 
                         //put buffer back to the original place
-                        mVideoCodec.queueInputBuffer(iid,0,data.length,100,1);
+                        h264Encodec.queueInputBuffer(iid,0,data.length,100,1);
                     }
 
                     MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-                    int outputBufferId = mVideoCodec.dequeueOutputBuffer(bufferInfo,0);
+                    int outputBufferId = h264Encodec.dequeueOutputBuffer(bufferInfo,0);
                     //
                     if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
                         //add video track
-//                        mVideoFormat = mVideoCodec.getOutputFormat();
+//                        mVideoFormat = h264Encodec.getOutputFormat();
 //                        mVideoTrackIndex = mMuxer.addTrack(mVideoFormat);
 //                        if (mVideoTrackIndex>= 0 && mAudioTrackIndex>=0){
 //                            mMuxer.startSendH264();
@@ -908,7 +850,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                     }else{
                     while (outputBufferId>=0){
                         //output buffer
-                        ByteBuffer outputBuffer = mVideoCodec.getOutputBuffer(outputBufferId);
+                        ByteBuffer outputBuffer = h264Encodec.getOutputBuffer(outputBufferId);
                         outputBuffer.slice();
 
                         byte[] outData = new byte[bufferInfo.size];
@@ -928,9 +870,10 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                             System.arraycopy(outData,0,key,HeadInfo.length,outData.length);
                             //version 1.0
                             //write key frame to h264
-                            try{
-                                H264fos.write(key, 0, key.length);
-                            }catch (IOException e){}
+
+//                            try{
+//                                H264fos.write(key, 0, key.length);
+//                            }catch (IOException e){}
 
                             //put key frame to queue
                             offerVideoQueue(key);
@@ -938,19 +881,20 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                         }else if(bufferInfo.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM){
                             //end frame
                         }else{
-                            try{
-                                H264fos.write(outData, 0, outData.length);
-                            }catch (IOException e){}
+
+//                            try{
+//                                H264fos.write(outData, 0, outData.length);
+//                            }catch (IOException e){}
 
                             //
                             offerVideoQueue(outData);
 
                         }
                         //release output buffer
-                        mVideoCodec.releaseOutputBuffer(outputBufferId,false);
+                        h264Encodec.releaseOutputBuffer(outputBufferId,false);
                         //change outputBufferId
                         //to continue this while circle
-                        outputBufferId = mVideoCodec.dequeueOutputBuffer(bufferInfo,0);
+                        outputBufferId = h264Encodec.dequeueOutputBuffer(bufferInfo,0);
                     }
                     }
                 }
@@ -1205,20 +1149,21 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
             //create mediacodec
             try {
-                mVideoCodec = MediaCodec.createEncoderByType("video/avc");//H264
+                h264Encodec = MediaCodec.createEncoderByType("video/avc");//H264
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
 
-            //config mVideoCodec using mediaformat
-            mVideoCodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-            mVideoCodec.start();
+            //config h264Encodec using mediaformat
+            h264Encodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+            h264Encodec.start();
 
 //        }catch(IOException e){}
 
             //test
     }
+
 
     public void toggleAudioRec(View v){
 //        isAudioRecording = !isAudioRecording;
@@ -1244,13 +1189,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         }
         sendH264.startSendH264();
     }
-    public void toggleMux(View v){
-        isMuxering = !isMuxering;
-        if (isMuxering)
-            muxStatus.setText("muxing...");
-        else
-            muxStatus.setText("not muxing...");
-    }
 
 
     //test h264 send
@@ -1259,113 +1197,30 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private Thread mSendH264TH = null;
     private FileInputStream mInStrH264 = null;
     private Handler mUIHandler = null;
-    private Handler mH264Handler = null;//send message to
-
-//    private Thread mH264SendTH=null;
-    public void initSendH264TH(){
-        //startSendH264 ui handler
-        if (mUIHandler == null){
-            mUIHandler = new Handler(){
-                @Override
-                public void handleMessage(Message msg) {
-                    super.handleMessage(msg);
-                    //handle message from sub-thread
-//                    sendH264Status.setText(msg.obj.toString());
-//                    sendH264Status.append("o");
 
 
-                    switch (msg.what){
-                        case 0x3:
-                            //write into total buffer
-                            byte[] tempB = (byte[])msg.obj;
-//                            getTotalBuffer();
-//                            System.arraycopy(tempB,0,getTotalBuffer(),totalBufferIndex,tempB.length);
-                            writeIntoTotalBuffer(tempB);
-
-                            //tempB.length should be changed
-                            totalBufferIndex = totalBufferIndex + tempB.length;
-
-                            break;
-                        case 0x105:
-                            sendH264Status.append("o");
-                        case 0x106:
-//                            sendH264Status.setText("");
-                            sendH264Status.append("i");
-                            break;
-                        case 0x201:
-                        case 0x202:
-                        case 0x203:
-                            sendH264Status.append(msg.obj.toString());
-                            break;
-                        case 0x301:
-                            sendH264Status.append(msg.obj.toString()+" ");
-                            break;
-                    }
-
-                }
-            };
-        }
-
-        //startSendH264 thread
-        if (mSendH264Run == null){
-            mSendH264Run =new sendH264Thread(mUIHandler, this);
-        }
-        mSendH264TH = new Thread(mSendH264Run);
-        mSendH264TH.start();
-
-
-//        mSendH264Run.mRecUIHandler.sendMessage(m);
-//        mH264Handler = new Handler(){}
-
-    }
 
     private int lastend = 0;//offset: last byte
-    /*
-    *
-    *toWriteBuffer:
-    */
-    public void writeIntoTotalBuffer(byte[] toWriteBuffer){
-        if (lastend + toWriteBuffer.length < totalBuffer.length){
-            //directly copy
-            System.arraycopy(toWriteBuffer,0,getTotalBuffer(),lastend,toWriteBuffer.length);
-            lastend = lastend + toWriteBuffer.length;
-        }else{
-            //previous part
-            int preLen = totalBuffer.length - lastend;
-            System.arraycopy(toWriteBuffer,0,getTotalBuffer(),lastend,preLen);
 
-            //later part
-            //startSendH264 at the beginning
-            int laterLen = toWriteBuffer.length - preLen;
-            System.arraycopy(toWriteBuffer,preLen,getTotalBuffer(),0,laterLen);
-
-            //handle lastend
-            lastend = laterLen;
-        }
-    }
 
     public void toggleH264(View v){
         //send
-        Message m = new Message();
-        m.what = 0x1;
-        mSendH264Run.mRecUIHandler.sendMessage(m);
-
-//        Sleep(10);
-//        startSendH264(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
-
-
+        isSendingH264 = true;
+        isVideoRec = true;
     }
+
+
 
     public void recvH264(View v){
-        //send recv message
-        Message m = new Message();
-        m.what = 0x2;
-        mSendH264Run.mRecUIHandler.sendMessage(m);
+        recvH264.startRecvH264();
+        Log.d("ssssssssssssss","recv h264");
     }
+
     //play recv h264 file
     //
     public void playRecvH264(View v){
-        startDecodingThread();
+        mPlayCodec.start();
+        decodeH264.startDecodeH264();
     }
 
 
@@ -1384,118 +1239,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private int Video_Height = 30;
     private int PlayFrameRate = 15;
     private Boolean isUsePpsAndSps = false;
-    private void init(String filePath){
-        File f = new File(filePath);
-        if (null == f || !f.exists() || f.length() == 0) {
-            Toast.makeText(this, "指定文件不存在", Toast.LENGTH_LONG).show();
-            return;
-        }
-        try {
-            //获取文件输入流
-            mPlayInputStream = new DataInputStream(new FileInputStream(new File(filePath)));
-//            mPlayInputStream = new DataInputStream(mSendH264Run.getReceiveStream());
-        }
-//        catch (Exception e){}
-        catch (FileNotFoundException e) {e.printStackTrace();}
 
-        initPlaySurfaceView();
-    }
-
-    public void initPlaySurfaceView() {
-        mPlaySurface = (SurfaceView) findViewById(R.id.preview);
-        mPlaySurfaceHolder = mPlaySurface.getHolder();
-        mPlaySurfaceHolder.addCallback(new SurfaceHolder.Callback(){
-            @Override
-            public void surfaceCreated(SurfaceHolder holder){
-                try {
-                    mPlayCodec = MediaCodec.createDecoderByType("video/avc");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                final MediaFormat mediaformat = MediaFormat.createVideoFormat("video/avc", Video_Width, Video_Height);
-
-                if (isUsePpsAndSps) {
-                    byte[] header_sps = {0, 0, 0, 1, 103, 66, 0, 42, (byte) 149, (byte) 168, 30, 0, (byte) 137, (byte) 249, 102, (byte) 224, 32, 32, 32, 64};
-                    byte[] header_pps = {0, 0, 0, 1, 104, (byte) 206, 60, (byte) 128, 0, 0, 0, 1, 6, (byte) 229, 1, (byte) 151, (byte) 128};
-                    mediaformat.setByteBuffer("csd-0", ByteBuffer.wrap(header_sps));
-                    mediaformat.setByteBuffer("csd-1", ByteBuffer.wrap(header_pps));
-                }
-                mediaformat.setInteger(MediaFormat.KEY_FRAME_RATE, PlayFrameRate);
-                mPlayCodec.configure(mediaformat, holder.getSurface(), null, 0);
-
-                MediaFormat mediaFormat;
-                mPlayCodec.setCallback(new MediaCodec.Callback(){
-                    @Override
-                    public void onInputBufferAvailable(MediaCodec codec, int index) {
-                        ByteBuffer inputBuffer = codec.getInputBuffer(index);
-                        int len = 0;
-                        if (!h264DataQueue.isEmpty()){
-                            try{
-                                byte[] b = h264DataQueue.take();
-                                len = b.length;
-                                inputBuffer.put(b);
-                            }catch (InterruptedException e){}
-
-                        }
-                        codec.queueInputBuffer(index,0,len,1000,0);
-                    }
-
-                    @Override
-                    public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
-                        ByteBuffer outputBuffer = codec.getOutputBuffer(index);
-                        MediaFormat bufferFormat = codec.getOutputFormat(index);
-                        // bufferFormat is equivalent to mOutputFormat
-                        // outputBuffer is ready to be processed or rendered.
-
-                        if (index >= 0) {
-                            while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - 1000) {
-                                try {
-                                    Thread.sleep(100);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            boolean doRender = (info.size != 0);
-                            codec.releaseOutputBuffer(index, doRender);
-                        } else {
-                        }
-                    }
-                    @Override
-                    public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
-
-                    }
-                    @Override
-                    public void onError(MediaCodec codec, MediaCodec.CodecException e) {
-
-                    }
-                });
-
-                mPlayCodec.start();
-            }
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-            }
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-
-            }
-        });
-
-
-        //test
-//        File f = new File(Environment.getExternalStorageDirectory() + "/carTempRecv.264");
-//        try {
-//            mPlayInputStream = new DataInputStream(new FileInputStream(f));
-//        } catch (FileNotFoundException e) {e.printStackTrace();}
-    }
-
-    private void startDecodingThread() {
-        mPlayCodec.start();
-        mDecodeThread = new Thread(new decodeH264Thread());
-        mDecodeThread.start();
-    }
 
     private boolean isPlayH264 = false;
 
@@ -1509,10 +1253,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         return totalBuffer;
     }
     //test
-    public byte[] testBytes = new byte[10000000];
-    public byte[] getTestBytes(){
-        return testBytes;
-    }
     public int totalBufferIndex =0;
     private byte[] totalBuffer = new byte[10000000];
 
@@ -1945,18 +1685,10 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     }
 
 
-    //-------------------------------aac receive
-    private BlockingQueue<byte[]> AACRecvQueue = new ArrayBlockingQueue<byte[]>(10000);
-    public BlockingQueue getAACRecvQueue(){
-        return AACRecvQueue;
-    }
 
 
-    //--------------------------------h264 receive
-    private BlockingQueue<byte[]> H264RecvQueue = new ArrayBlockingQueue<byte[]>(10000);
-    public BlockingQueue getH264RecvQueue(){
-        return H264RecvQueue;
-    }
+
+
 
 
 }

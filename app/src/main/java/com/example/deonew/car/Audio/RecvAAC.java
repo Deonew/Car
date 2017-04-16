@@ -29,7 +29,6 @@ public class RecvAAC {
         public void run() {
             super.run();
 
-//            while(true){
                 try {
                     recvSocket = new Socket("10.105.36.224",18888);
 //                    recvSocket = new Socket("192.168.1.105",18888);
@@ -40,7 +39,6 @@ public class RecvAAC {
 
                     mAudioAC.getAACRecvQueue().clear();
                     while(true){
-//                        while(isRecv){
                             byte[] readByte = new byte[2000];
                             int n;
                             while((n = ins.read(readByte))!=-1){
@@ -49,12 +47,10 @@ public class RecvAAC {
                                 System.arraycopy(readByte,0,toOffer,0,n);
                                 mAudioAC.getAACRecvQueue().offer(toOffer);
                             }
-//                        }
                     }
                 }catch (IOException e){
                     Log.d("ssssssssssssssss","wrong");
                 }
-//            }
 
         }
     }

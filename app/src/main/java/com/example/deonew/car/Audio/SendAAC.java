@@ -25,6 +25,10 @@ public class SendAAC {
     public void startSendAAC(){
         new sendAACSocket().start();
     }
+    private boolean isSendingAac = false;
+    public void setSendAacStatus(boolean value){
+        isSendingAac = value;
+    }
     //get data frome queue
     private class sendAACSocket extends Thread{
         @Override
@@ -32,28 +36,30 @@ public class SendAAC {
             super.run();
 
             try{
-//                send = new Socket("10.105.36.224",8888);
-                send = new Socket("10.1.1.1",8888);//obu
+                send = new Socket("10.105.36.224",8888);
+//                send = new Socket("10.1.1.1",8888);//obu
                 sendStream = send.getOutputStream();
             }catch (IOException e){}
 
 
             while(true){
-                if (!mainAC.getAACSendQueue().isEmpty()){
-                    Log.d("aac","get one");
-                    try{
-                        //maybe wrong
-                        byte[] tmp = (byte[])mainAC.getAACSendQueue().poll();
-                        if (sendStream != null){
-                            sendStream.write(tmp);
-                            sendStream.flush();
-                        }
-                    }catch (IOException e){}
+                if (isSendingAac){
+                    if (!mainAC.getAACSendQueue().isEmpty()){
+                        Log.d("aac","send one");
+                        try{
+                            //maybe wrong
+                            byte[] tmp = (byte[])mainAC.getAACSendQueue().poll();
+                            if (sendStream != null){
+                                sendStream.write(tmp);
+                                sendStream.flush();
+                            }
+                        }catch (IOException e){}
 
+                    }
+                    try {
+                        Thread.sleep(10);
+                    }catch (InterruptedException e){}
                 }
-                try {
-                    Thread.sleep(10);
-                }catch (InterruptedException e){}
             }
         }
     }

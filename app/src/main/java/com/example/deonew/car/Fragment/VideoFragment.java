@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.example.deonew.car.R;
-import com.example.deonew.car.VideoActivity2;
+import com.example.deonew.car.Video.VideoActivity2;
 
 /**
  * Created by deonew on 17-4-5.

@@ -8,7 +8,7 @@ import android.media.MediaFormat;
 import android.media.MediaRecorder;
 import android.os.Environment;
 
-import com.example.deonew.car.VideoActivity2;
+import com.example.deonew.car.Video.VideoActivity2;
 
 import java.io.File;
 import java.io.FileNotFoundException;
