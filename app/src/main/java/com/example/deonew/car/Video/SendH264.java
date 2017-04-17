@@ -16,6 +16,7 @@ public class SendH264 {
     private OutputStream sendStream;
 
     public SendH264(VideoActivity2 v){
+        Log.d("sssssssssssssssssssss","send h264s");
         this.mainAC = v;
     }
     private boolean isSendingH264 = false;
@@ -31,11 +32,19 @@ public class SendH264 {
         public void run() {
             super.run();
 
+            Log.d("sssssssssssssssssssss","start socket");
             try{
 //                send = new Socket("10.105.36.224",8888);
-                send = new Socket("10.1.1.1",8888);//obu
+//                send = new Socket("10.105.36.59",18888);
+//                send = new Socket("10.202.0.197",18888);//phone
+                send = new Socket("10.202.1.77",18888);//phone
+                send = new Socket("192.168.12.91",18888);//phone
+                Log.d("sssssssssssssssssssss","success");
+//                send = new Socket("10.1.1.1",8888);//obu
                 sendStream = send.getOutputStream();
-            }catch (IOException e){}
+            }catch (IOException e){
+                Log.d("sssssssssssssssssssss","worong");
+            }
 
 
             Log.d("sssssssssssssssssssss","send");

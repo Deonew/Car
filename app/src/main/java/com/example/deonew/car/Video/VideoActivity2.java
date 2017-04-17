@@ -21,7 +21,6 @@ import android.media.ImageReader;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
-import android.media.MediaMuxer;
 import android.media.MediaRecorder;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -44,6 +43,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.deonew.car.R;
+import com.example.deonew.car.Video.camera.Camera2BasicFragment;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -136,7 +136,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
     //read [video] data from codec
     // thread
-    private boolean isVideoRec = false;
+
+    private boolean isH264Record = false;
     private Thread mVideoDataReadTH;
 
 
@@ -173,7 +174,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     //debug
     private TextView videoStatus;
     private TextView audioStatus;
-    private TextView muxStatus;
     private TextView sendH264Status;
     private TextView ipinfo;
     @Override
@@ -182,14 +182,19 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_video2);
 
+//        getFragmentManager().beginTransaction()
+//                .replace(R.id.container, Camera2BasicFragment.newInstance())
+//                .commit();
+
+
         videoStatus = (TextView)findViewById(R.id.videoRecStatus);
         audioStatus = (TextView)findViewById(R.id.audioRecStatus);
-        muxStatus = (TextView)findViewById(R.id.muxStatus);
         sendH264Status = (TextView)findViewById(R.id.sendH264Status);
         ipinfo = (TextView)findViewById(R.id.ipinfo);
 
 
         Log.d(TAG,"11111111");
+        Log.d("sssssssssssssssssss","11111111");
 
         sendH264Status.setText(H264Path);
 
@@ -198,7 +203,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //        map.getOutputFormats();
 //----------------------------------------------------------video
         //camera
-        initView();
+//        initView();
         //startSendH264 video codec
 //        initVideoCodec();
 
@@ -219,12 +224,13 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         Log.d(TAG,"11111111");
 
 
+
 //        mDecodeThread = new Thread(new decodeH264Thread());
 
 //        decodeH264 = new DecodeH264(this);
 
 //        startSendH264 read data
-//        isVideoRec = true;
+//        isH264Record = true;
         //startSendH264 audio
 //        initAudioManager();
         //
@@ -238,7 +244,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
 //        mAudioRecManager.startAudioRec();
-//        isVideoRec = true;
+//        isH264Record = true;
 //        isMuxering = true;
 
 //
@@ -259,6 +265,14 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         initView();
 
         initVideoCodec();
+
+        //
+//        initMediaCodec();
+
+
+
+        //
+
 
     }
 
@@ -375,14 +389,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
 
-    public void addAudioTrack(){
-//        add audio track
-//        mAudioFormat = mAudioRecManager.getAudioCodecOutputFormat();
-//        mAudioTrackIndex = mMuxer.addTrack(mAudioFormat);
-//        if (mAudioTrackIndex>=0 && mVideoTrackIndex>=0){
-//            mMuxer.startSendH264();
-//        }
-    }
+
 
     public void initVideoCodec(){
         //asynchronous
@@ -555,62 +562,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 if (characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT)
                     continue;
 
-
-                //show all sizes
-//                Size[] s = map.getOutputSizes(SurfaceTexture.class);
-//                for (int i =0 ;i< s.length; i++){
-//                    Message m = mainHandler.obtainMessage(1,1,1,s[i].getWidth());
-//                    mainHandler.sendMessage(m);
-//                    m = mainHandler.obtainMessage(1,1,1," ");
-//                    mainHandler.sendMessage(m);
-//                    m = mainHandler.obtainMessage(1,1,1,s[i].getHeight());
-//                    mainHandler.sendMessage(m);
-//                    m = mainHandler.obtainMessage(1,1,1," ");
-//                    mainHandler.sendMessage(m);
-//                }
-
-//                Size mVideoSize =
-                //choose optimal size
-                //from all size option
-                //1 get all size [at least] as big as the preview surface
-//                List<Size> bigEnough = new ArrayList<Size>();
-//                int w = aspectRatio.getWidth();
-//                int h = aspectRatio.getHeight();
-//                for (Size option : choices) {
-//                    if (option.getHeight() == option.getWidth() * h / w &&
-//                            option.getWidth() >= surfaceWidth && option.getHeight() >= surfaceHeight) {
-//                        bigEnough.add(option);
-//                    }
-//                }
-
-//                if (bigEnough.size() > 0) {
-//                    return Collections.min(bigEnough, new CompareSizesByArea());
-//                }
-//
-//                int orientation = getResources().getConfiguration().orientation;
-//                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//                    mTextureView.setAspectRatio(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-//                } else {
-//                    mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
-//                }
-//                mPreviewSize = getOptimalSize(map.getOutputSizes(SurfaceTexture.class), surfaceWidth, surfaceHeight);
-//                mTextureView.set
-
                 //set
                 StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-//                Size largest = Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new CompareSizesByArea());
-                //get all camera output size
-//                Size[] s1 = map.getOutputSizes(ImageFormat.YUV_420_888);
-//                for (int i =0 ;i< s1.length; i++){
-//                    Message m = mainHandler.obtainMessage(1,1,1,s1[i].getWidth());
-//                    mainHandler.sendMessage(m);
-//                    m = mainHandler.obtainMessage(1,1,1," ");
-//                    mainHandler.sendMessage(m);
-//                    m = mainHandler.obtainMessage(1,1,1,s1[i].getHeight());
-//                    mainHandler.sendMessage(m);
-//                    m = mainHandler.obtainMessage(1,1,1," ");
-//                    mainHandler.sendMessage(m);
-//                }
 
 
                 mCameraID = cameraID;
@@ -715,7 +668,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 //encode every frame
 
 
-                if(isVideoRec){
+                if(isH264Record){
 
                     //yuv_420_888 to I420
 
@@ -1130,12 +1083,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         }
         return data;
     }
-
-    //mediacodec
-//    private String path = Environment.getExternalStorageDirectory() + "/easy.h264";
     private int bitrate, framerate = 30;
-//    framerate = 15;
-//    bitrate = 2 * surfaceWidth * surfaceHeight * framerate / 20;
     public void initMediaCodec(){
 //        try{
             //create Media format
@@ -1180,13 +1128,20 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         mAudioRec.startRecording();
 
     }
-    public void toggleVideoRec(View v){
-        isVideoRec = !isVideoRec;
-        if (isVideoRec){
-            videoStatus.setText("video is rec...");
-        }else{
-            videoStatus.setText("video not rec...");
-        }
+
+    public void RecordH264(View v){
+//        isH264Record = !isH264Record;
+        isH264Record = true;
+//        if (isH264Record){
+//            videoStatus.setText("video is rec...");
+//        }else{
+//            videoStatus.setText("video not rec...");
+//        }
+//        isH264Record
+    }
+
+
+    public void SendH264(View v){
         sendH264.startSendH264();
     }
 
@@ -1206,7 +1161,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     public void toggleH264(View v){
         //send
         isSendingH264 = true;
-        isVideoRec = true;
+        isH264Record = true;
     }
 
 
@@ -1244,18 +1199,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private boolean isPlayH264 = false;
 
     //added 4.3
-    private int h264RecvReadIndex = 0;//read count
-    private int readLength = 1024;//read length every time
-    private String recvCarTempH264Path = Environment.getExternalStorageDirectory() + "/carTempRecv.264";
-    private byte[] h264Bytes;
-
-    public byte[] getTotalBuffer() {
-        return totalBuffer;
-    }
-    //test
-    public int totalBufferIndex =0;
-    private byte[] totalBuffer = new byte[10000000];
-
     public byte[] streamBuffer = null;
 
     //queue use
@@ -1320,14 +1263,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                         byteBuffer.put(streamBuffer, startIndex, nextFrameStart - startIndex);
                         mPlayCodec.queueInputBuffer(inIndex, 0, nextFrameStart - startIndex, 0, 0);
 
-                        //get data from totalbuffer
-//                        byteBuffer.put(b);
-//                        mPlayCodec.queueInputBuffer(inIndex, 0, b.length, 100, 0);
-
-                        //get data from public buffer
-//                        byte[] b = getCodecPutData();
-//                        byteBuffer.put(b);
-//                        mPlayCodec.queueInputBuffer(inIndex, 0, b.length, 100, 0);
                         startIndex = nextFrameStart;
                     } else {
                         continue;
@@ -1355,99 +1290,9 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     }
 
     private int lastFrameEnd = 0;//last time read a frame
-    private int nextFrameStart = 0;
 
 
 
-    public byte[] getCodecPutData(){
-//        byte[] tempFrame = null;
-
-        //generate lsp
-        byte[] pattern = new byte[]{0, 0, 0, 1};//nalu head
-        int[] lsp = new int[pattern.length];
-        lsp[0] = 0;  // Base case
-        for (int i = 1; i < pattern.length; i++) {
-            // Start by assuming we're extending the previous LSP
-            int j = lsp[i - 1];
-            while (j > 0 && pattern[i] != pattern[j])
-                j = lsp[j - 1];
-            if (pattern[i] == pattern[j])
-                j++;
-            lsp[i] = j;
-        }
-
-        //get next frame offset
-//        nextFrameStart = lastFrameEnd;
-        int tempOffset = lastFrameEnd;
-        boolean isGetFrame = false;
-        int patternIndex = 0;
-        boolean isParted = false;//
-        int preLength = 0;
-        int laterLength = 0;
-        while(!isGetFrame){
-            //if read end
-            if (tempOffset >= streamBuffer.length){
-                //
-                preLength = tempOffset - lastFrameEnd;
-                tempOffset = 0;
-            }
-
-            while (patternIndex > 0 && streamBuffer[tempOffset] != pattern[patternIndex]) {
-                patternIndex = lsp[patternIndex - 1];  // Strictly decreasing
-            }
-            if (streamBuffer[tempOffset] == pattern[patternIndex]) {
-                patternIndex++;
-                if (patternIndex == pattern.length)
-                    break;
-            }
-            tempOffset++;
-        }
-        //get later length if parted
-        if (isParted){
-            laterLength = tempOffset;
-        }else{
-            laterLength = tempOffset - lastFrameEnd;
-        }
-
-        //get temp frame data
-        byte[] tempFrame = new byte[preLength + laterLength];
-        if (isParted){
-            //get pre-part
-            System.arraycopy(streamBuffer,lastFrameEnd,tempFrame,0,preLength);
-            //get later part
-            System.arraycopy(streamBuffer,0,tempFrame,preLength,laterLength);
-        }else{
-            //directly get later
-            System.arraycopy(streamBuffer,lastFrameEnd,tempFrame,0,laterLength);
-        }
-
-        //change lastFrameEnd at last
-        lastFrameEnd = tempOffset;
-
-        //
-        Message m = new Message();
-        m.what = 0x106;
-        m.obj = lsp;
-        mUIHandler.sendMessage(m);
-
-        return tempFrame;
-//        int j = 0;  // Number of chars matched in pattern
-//        for (int i = lastFrameEnd; i < remain; i++) {
-//            while (j > 0 && bytes[i] != pattern[j]) {
-//                // Fall back in the pattern
-//                j = lsp[j - 1];  // Strictly decreasing
-//            }
-//            if (bytes[i] == pattern[j]) {
-//                // Next char matched, increment position
-//                j++;
-//                if (j == pattern.length)
-//                    return i - (j - 1);
-//            }
-//        }
-//        return -1;
-
-
-    }
 
     //get byte array from a stream
     public static byte[] getBytes(InputStream is) throws IOException {
@@ -1683,12 +1528,4 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         }
         return nextIndex;
     }
-
-
-
-
-
-
-
-
 }

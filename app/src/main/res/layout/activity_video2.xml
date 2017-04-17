@@ -13,8 +13,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/toggleVideoRec"
-            android:text="toggleVideoRec"
-            android:onClick="toggleVideoRec"/>
+            android:text="recordH264"
+            android:onClick="RecordH264"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/sendH264"
+            android:text="sendH264"
+            android:onClick="SendH264"/>
 
         <Button
             android:layout_width="wrap_content"
@@ -27,12 +33,7 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/sendH264"
-            android:text="sendH264"
-            android:onClick="toggleH264"/>
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -74,6 +75,12 @@
             android:id="@+id/ipinfo"/>
 
     </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000"/>
 
     <SurfaceView
         android:id="@+id/preview"

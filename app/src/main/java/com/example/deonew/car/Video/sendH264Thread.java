@@ -41,27 +41,6 @@ public class sendH264Thread implements Runnable{
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
 
-                //handle message here
-//                sendToUIHandler("haha");
-
-                switch (msg.what){
-                    case 0x1:// send file
-                        String s = msg.obj.toString();
-                        //string to byte[]
-//                        byte[] sByte = new byte[s.length()];
-//                        sByte = s.getBytes();
-//                        sendFile(sByte);
-                        sendFile((byte[]) msg.obj);
-                        sendFile(s.getBytes());
-//                        sendFile(msg.obj.toArray());
-                        sendToUIHandler(s.length()+"");
-//                        sendToUIHandler("send file");
-                        break;
-                    case 0x2:
-                        receiveFile();
-                        sendToUIHandler("recv file");
-                        break;
-                }
             }
         };
         Looper.loop();

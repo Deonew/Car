@@ -138,7 +138,7 @@ public class AudioRecManager {
 
         if (outputBuffIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
             //add audio track
-            mVideoActivity2.addAudioTrack();
+//            mVideoActivity2.addAudioTrack();
         }else if(outputBuffIndex == MediaCodec.INFO_TRY_AGAIN_LATER){
 
         }else{
