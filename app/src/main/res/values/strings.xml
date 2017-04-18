@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">Car</string>
+        <string name="app_name">Car</string>
+        <string name="picture">Picture</string>
+        <string name="intro_message">Picture</string>
+        <string name="description_info">Info</string>
+        <string name="request_permission">This sample needs camera permission.</string>
+        <string name="camera_error">This device doesn\'t support Camera2 API.</string>
 </resources>

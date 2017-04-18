@@ -213,14 +213,21 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //        if (file.exists()){
 //            file.delete();
 //        }
-//        try{
-//            H264fos = new FileOutputStream(H264Path,true);
-//        }catch (FileNotFoundException e){
-//        }
+        try{
+            H264fos = new FileOutputStream(H264Path,true);
+        }catch (FileNotFoundException e){
+        }
+
+
 
         sendH264 = new SendH264(this);
+//        sendH264.connectToBox();
+//        sendH264.connectToPhone();
+
 
         recvH264 = new RecvH264(this);
+
+
         Log.d(TAG,"11111111");
 
 
@@ -269,26 +276,12 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         //
 //        initMediaCodec();
 
-
-
         //
 
 
     }
 
-    public void getIP(){
-        WifiManager wifiManager = (WifiManager)this.getSystemService(Context.WIFI_SERVICE);
-        if (!wifiManager.isWifiEnabled()) {
-            wifiManager.setWifiEnabled(true);
-        }
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        int ipAddress = wifiInfo.getIpAddress();
-        String ipString = (ipAddress & 0xFF ) + "." +
-                ((ipAddress >> 8 ) & 0xFF) + "." +
-                ((ipAddress >> 16 ) & 0xFF) + "." +
-                ( ipAddress >> 24 & 0xFF);
-        ipinfo.setText(ipString);
-    }
+
 
 
     //--------------------------------audio
@@ -439,7 +432,9 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 //        mMediaCodecSurface.toString();
 
         MediaFormat mediaFormat = MediaFormat.createVideoFormat("video/avc", surfaceHeight, surfaceWidth);
+
         //synchronous
+
         mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
         mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, surfaceHeight * surfaceWidth *3);
         mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 256000);
@@ -520,35 +515,12 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private byte[] HeadInfo = null;
     //startSendH264 with given size
     private void initCamera2() {
-//        HandlerThread handlerThread = new HandlerThread("Camera2");
-//        handlerThread.startSendH264();
-//        childHandler = new Handler(handlerThread.getLooper());
-
-        //handle message
-        mainHandler = new Handler(getMainLooper()){
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                videoStatus.append(msg.obj.toString());
-//                videoStatus.append("h,");
-
-//                switch (msg.what){
-//                    case 0x3://data from recv thread
-////                        getTotalBuffer()
-//                        break;
-//
-//                }
-            }
-        };
-
         //set up camera size
         mCameraID = "" + CameraCharacteristics.LENS_FACING_FRONT;
 //        mCameraID = "" + CameraCharacteristics.LENS_FACING_BACK;
-
-
         initImageReader();
-
         mCameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
         //test set surfaceview size
         mSurfaceView.getLayoutParams().width = surfaceWidth;
         mSurfaceView.getLayoutParams().height = surfaceHeight;
@@ -565,11 +537,9 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                 //set
                 StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 
-
                 mCameraID = cameraID;
             }
         }catch (CameraAccessException e){}
-
         //open camera
         try {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -582,92 +552,29 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     }
 
 
-    private int s = 1;
     private void initImageReader() {
         //startSendH264 mH264Handler
 
 //        mImageReader = ImageReader.newInstance(surfaceWidth, surfaceHeight, ImageFormat.YV12,1);//ok
 //        mImageReader = ImageReader.newInstance(surfaceWidth, surfaceHeight, ImageFormat.JPEG,1);//test jpeg//ok
         mImageReader = ImageReader.newInstance(surfaceWidth, surfaceHeight, ImageFormat.YUV_420_888,1);//
+//        mImageReader = ImageReader.newInstance(1920, 1080, ImageFormat.YUV_420_888,1);//
         mImageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
 
+                Log.d("sssssssssssssss","fffffffffffffffff");
                 //get data
                 Image image = reader.acquireNextImage();
 
-//                Toast.makeText(getApplicationContext(),format,Toast.LENGTH_SHORT).show();
-
                 ByteBuffer buffer = image.getPlanes()[0].getBuffer();//get byte buffer
+
                 //original image data byte[]
                 byte[] rawbytes = new byte[buffer.remaining()];
                 buffer.get(rawbytes);
 
-                //it worked
-//                if (s == 1){
-//                //write a frame picture
-//                FileOutputStream output = null;
-//                String mFile = Environment.getExternalStorageDirectory() + "/carTemp.jpeg";
-//                try {
-//                    output = new FileOutputStream(mFile);
-//                    output.write(rawbytes);
-//                }catch (IOException e){}
-//                    s =2;
-//                }
-
-
-                //get image info before image close
                 Rect crop = image.getCropRect();
                 int format = image.getFormat();//format: 35 = 0x23
-
-
-//                rawbytes = getDataFromImage(image,1);
-                //camera get yv12
-                //mediacodec need I420P
-                //yv12 to I420P
-                //
-//                byte[] I420Pbytes = new byte[rawbytes.length];
-                //swap 1.0
-//                byte[] tempU = new byte[surfaceHeight*surfaceWidth/4];
-//                byte[] tempV = new byte[surfaceHeight*surfaceWidth/4];
-//                //copy V
-//                System.arraycopy(rawbytes,surfaceWidth*surfaceHeight,tempV,0,tempV.length);
-//                //copy U
-//                System.arraycopy(rawbytes,surfaceWidth*surfaceHeight+tempV.length,tempU,0,tempU.length);
-//
-//                //swap u and v
-//                System.arraycopy(tempV,0,rawbytes,surfaceWidth*surfaceHeight+tempV.length,tempV.length);
-//                System.arraycopy(tempU,0,rawbytes,surfaceWidth*surfaceHeight,tempU.length);
-//                //end swap1.0
-
-                //swap 2.0
-//                int i = surfaceWidth*surfaceHeight;
-//                for (int j = 0 ;j<surfaceWidth*surfaceHeight/4;j++){
-//                    byte t;
-//                    t = rawbytes[i+j];
-//                    rawbytes[i+j]= rawbytes[i+j+surfaceWidth*surfaceHeight/4];
-//                    rawbytes[i+j+surfaceWidth*surfaceHeight/4] = t;
-//                }
-                //end swap 2.0
-
-                //swap 3.0
-                //use new byte[]
-//                byte[] I420Pbytes = new byte[rawbytes.length];
-//                System.arraycopy(rawbytes,0,I420Pbytes,0,surfaceWidth*surfaceHeight);
-//                System.arraycopy(rawbytes,surfaceWidth*surfaceHeight+surfaceWidth*surfaceHeight/4,I420Pbytes,surfaceWidth*surfaceHeight,surfaceWidth*surfaceHeight/4);
-//                System.arraycopy(rawbytes,surfaceWidth*surfaceHeight,I420Pbytes,surfaceWidth*surfaceHeight+surfaceWidth*surfaceHeight/4,surfaceWidth*surfaceHeight/4);
-                //end swap 3.0
-
-
-                //format I420P
-
-//                buffer.get(rawbytes);
-
-
-
-                //encode every frame
-
-
                 if(isH264Record){
 
                     //yuv_420_888 to I420
@@ -774,6 +681,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                         }
                     }
 
+                    Log.d(TAG,data.length+"");
 
                     //add codec input buffer
                     //wait for 10 msec
@@ -793,12 +701,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                     int outputBufferId = h264Encodec.dequeueOutputBuffer(bufferInfo,0);
                     //
                     if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
-                        //add video track
-//                        mVideoFormat = h264Encodec.getOutputFormat();
-//                        mVideoTrackIndex = mMuxer.addTrack(mVideoFormat);
-//                        if (mVideoTrackIndex>= 0 && mAudioTrackIndex>=0){
-//                            mMuxer.startSendH264();
-//                        }
                     }else if(outputBufferId == MediaCodec.INFO_TRY_AGAIN_LATER){
                     }else{
                     while (outputBufferId>=0){
@@ -824,9 +726,9 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                             //version 1.0
                             //write key frame to h264
 
-//                            try{
-//                                H264fos.write(key, 0, key.length);
-//                            }catch (IOException e){}
+                            try{
+                                H264fos.write(key, 0, key.length);
+                            }catch (IOException e){}
 
                             //put key frame to queue
                             offerVideoQueue(key);
@@ -835,9 +737,9 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                             //end frame
                         }else{
 
-//                            try{
-//                                H264fos.write(outData, 0, outData.length);
-//                            }catch (IOException e){}
+                            try{
+                                H264fos.write(outData, 0, outData.length);
+                            }catch (IOException e){}
 
                             //
                             offerVideoQueue(outData);
@@ -913,9 +815,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             previewRequestBuilder.addTarget(mSurfaceHolder.getSurface());
             //enable onimageavailable
             previewRequestBuilder.addTarget(mImageReader.getSurface());
-            //new image reader
-//            previewRequestBuilder.addTarget(mNewImageReader.getSurface());
-//            previewRequestBuilder.addTarget(mMediaCodecSurface);
+
+
             mCameraDevice.createCaptureSession(Arrays.asList(mSurfaceHolder.getSurface(), mImageReader.getSurface()), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
@@ -945,176 +846,15 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
             e.printStackTrace();
         }
     }
-    //new preview
-    private void newStartCamearPreview() {
-        SurfaceTexture mSurfaceTexture = mTextureView.getSurfaceTexture();
-//        mSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-        Surface mSurface = new Surface(mSurfaceTexture);
 
-    }
 
     @Override
     public void onClick(View v) {
 //        takePicture();
     }
 
-//    /**
-//     * 拍照
-//     */
-//    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-//    private void takePicture() {
-//        if (mCameraDevice == null) return;
-//        // 创建拍照需要的CaptureRequest.Builder
-//        final CaptureRequest.Builder captureRequestBuilder;
-//        try {
-//            captureRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-//            // 将imageReader的surface作为CaptureRequest.Builder的目标
-//            captureRequestBuilder.addTarget(mImageReader.getSurface());
-//            // 自动对焦
-//            captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-//            // 自动曝光
-//            captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-//            // 获取手机方向
-//            int rotation = getWindowManager().getDefaultDisplay().getRotation();
-//            // 根据设备方向计算设置照片的方向
-//            captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
-//            //拍照
-//            CaptureRequest mCaptureRequest = captureRequestBuilder.build();
-//            mCameraCaptureSession.capture(mCaptureRequest, null, childHandler);
-//        } catch (CameraAccessException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-
-
-
-    //encode
-
-    private static final int COLOR_FormatI420 = 1;
-    private static final int COLOR_FormatNV21 = 2;
-
-    private static boolean isImageFormatSupported(Image image) {
-        int format = image.getFormat();
-        switch (format) {
-            case ImageFormat.YUV_420_888:
-            case ImageFormat.NV21:
-            case ImageFormat.YV12:
-                return true;
-        }
-        return false;
-    }
-
-    private static byte[] getDataFromImage(Image image, int colorFormat) {
-        if (colorFormat != COLOR_FormatI420 && colorFormat != COLOR_FormatNV21) {
-            throw new IllegalArgumentException("only support COLOR_FormatI420 " + "and COLOR_FormatNV21");
-        }
-        if (!isImageFormatSupported(image)) {
-            throw new RuntimeException("can't convert Image to byte array, format " + image.getFormat());
-        }
-        Rect crop = image.getCropRect();
-        int format = image.getFormat();
-        int width = crop.width();
-        int height = crop.height();
-        Image.Plane[] planes = image.getPlanes();
-        byte[] data = new byte[width * height * ImageFormat.getBitsPerPixel(format) / 8];
-        byte[] rowData = new byte[planes[0].getRowStride()];
-//        if (VERBOSE) Log.v(TAG, "get data from " + planes.length + " planes");
-        int channelOffset = 0;
-        int outputStride = 1;
-        for (int i = 0; i < planes.length; i++) {
-            switch (i) {
-                case 0:
-                    channelOffset = 0;
-                    outputStride = 1;
-                    break;
-                case 1:
-                    if (colorFormat == COLOR_FormatI420) {
-                        channelOffset = width * height;
-                        outputStride = 1;
-                    } else if (colorFormat == COLOR_FormatNV21) {
-                        channelOffset = width * height + 1;
-                        outputStride = 2;
-                    }
-                    break;
-                case 2:
-                    if (colorFormat == COLOR_FormatI420) {
-                        channelOffset = (int) (width * height * 1.25);
-                        outputStride = 1;
-                    } else if (colorFormat == COLOR_FormatNV21) {
-                        channelOffset = width * height;
-                        outputStride = 2;
-                    }
-                    break;
-            }
-            ByteBuffer buffer = planes[i].getBuffer();
-            int rowStride = planes[i].getRowStride();
-            int pixelStride = planes[i].getPixelStride();
-//            if (VERBOSE) {
-//                Log.v(TAG, "pixelStride " + pixelStride);
-//                Log.v(TAG, "rowStride " + rowStride);
-//                Log.v(TAG, "surfaceWidth " + surfaceWidth);
-//                Log.v(TAG, "surfaceHeight " + surfaceHeight);
-//                Log.v(TAG, "buffer size " + buffer.remaining());
-//            }
-            int shift = (i == 0) ? 0 : 1;
-            int w = width >> shift;
-            int h = height >> shift;
-            buffer.position(rowStride * (crop.top >> shift) + pixelStride * (crop.left >> shift));
-            for (int row = 0; row < h; row++) {
-                int length;
-                if (pixelStride == 1 && outputStride == 1) {
-                    length = w;
-                    buffer.get(data, channelOffset, length);
-                    channelOffset += length;
-                } else {
-                    length = (w - 1) * pixelStride + 1;
-                    buffer.get(rowData, 0, length);
-                    for (int col = 0; col < w; col++) {
-                        data[channelOffset] = rowData[col * pixelStride];
-                        channelOffset += outputStride;
-                    }
-                }
-                if (row < h - 1) {
-                    buffer.position(buffer.position() + rowStride - length);
-                }
-            }
-//            if (VERBOSE) Log.v(TAG, "Finished reading data from plane " + i);
-        }
-        return data;
-    }
-    private int bitrate, framerate = 30;
-    public void initMediaCodec(){
-//        try{
-            //create Media format
-            MediaFormat mediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC,1080,1920);
-
-            //config mediaformat
-            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
-            mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, 1080*1920*5);
-            mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
-            mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
-
-            //create mediacodec
-            try {
-                h264Encodec = MediaCodec.createEncoderByType("video/avc");//H264
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            //config h264Encodec using mediaformat
-            h264Encodec.configure(mediaFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-            h264Encodec.start();
-
-//        }catch(IOException e){}
-
-            //test
-    }
-
 
     public void toggleAudioRec(View v){
-//        isAudioRecording = !isAudioRecording;
 
         isAudioRecording = true;
         if (isAudioRecording){
@@ -1130,16 +870,8 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     }
 
     public void RecordH264(View v){
-//        isH264Record = !isH264Record;
         isH264Record = true;
-//        if (isH264Record){
-//            videoStatus.setText("video is rec...");
-//        }else{
-//            videoStatus.setText("video not rec...");
-//        }
-//        isH264Record
     }
-
 
     public void SendH264(View v){
         sendH264.startSendH264();
@@ -1152,17 +884,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     private Thread mSendH264TH = null;
     private FileInputStream mInStrH264 = null;
     private Handler mUIHandler = null;
-
-
-
-    private int lastend = 0;//offset: last byte
-
-
-    public void toggleH264(View v){
-        //send
-        isSendingH264 = true;
-        isH264Record = true;
-    }
 
 
 

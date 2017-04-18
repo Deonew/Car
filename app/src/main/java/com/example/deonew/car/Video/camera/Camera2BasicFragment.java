@@ -29,6 +29,7 @@ import android.content.res.Configuration;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -43,7 +44,11 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.media.MediaCodec;
+import android.media.MediaCodecInfo;
+import android.media.MediaFormat;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
@@ -57,11 +62,14 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.deonew.car.R;
+import com.example.deonew.car.Video.VideoActivity3;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -179,7 +187,7 @@ public class Camera2BasicFragment extends Fragment
     private CameraDevice mCameraDevice;
 
     /**
-     * The {@link Size} of camera preview.
+     * The {@link android.util.Size} of camera preview.
      */
     private Size mPreviewSize;
 
@@ -236,6 +244,9 @@ public class Camera2BasicFragment extends Fragment
      */
     private File mFile;
 
+    private byte[] HeadInfo = null;
+    private FileOutputStream H264fos;
+    private boolean isRecord = false;
     /**
      * This a callback object for the {@link ImageReader}. "onImageAvailable" will be called when a
      * still image is ready to be saved.
@@ -245,9 +256,210 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onImageAvailable(ImageReader reader) {
-            mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
-        }
+//            Log.d(TAG,"image get");
 
+            if (H264fos == null){
+                try{
+                    Log.d(TAG,"init file");
+                    H264fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/carTemp.h264",true);
+                }catch (FileNotFoundException e){
+                }
+            }
+
+            Image image = reader.acquireNextImage();
+
+            if (isRecord){
+                Rect crop = image.getCropRect();
+                int format = image.getFormat();//format: 35 = 0x23
+                int width = crop.width();
+                int height = crop.height();
+                Log.d(TAG,width+"  "+height);
+                Log.d(TAG,"origin"+mPreviewSize.getWidth()+"  "+mPreviewSize.getHeight());
+                Image.Plane[] planes = image.getPlanes();
+                byte[] data = new byte[width * height * ImageFormat.getBitsPerPixel(format) / 8];
+                byte[] rowData = new byte[planes[0].getRowStride()];
+                int channelOffset = 0;
+                int outputStride = 1;
+                for (int i = 0; i < planes.length; i++) {
+                    switch (i) {
+                        case 0:
+                            channelOffset = 0;
+                            outputStride = 1;
+                            break;
+                        case 1:
+                            channelOffset = width * height;
+                            outputStride = 1;
+                            break;
+                        case 2:
+                            channelOffset = (int) (width * height * 1.25);
+                            outputStride = 1;
+                            break;
+                    }
+                    ByteBuffer planebuffer = planes[i].getBuffer();
+                    int rowStride = planes[i].getRowStride();
+                    int pixelStride = planes[i].getPixelStride();
+                    int shift = (i == 0) ? 0 : 1;
+                    int w = width >> shift;
+                    int h = height >> shift;
+                    planebuffer.position(rowStride * (crop.top >> shift) + pixelStride * (crop.left >> shift));
+                    for (int row = 0; row < h; row++) {
+                        int length;
+                        if (pixelStride == 1 && outputStride == 1) {
+                            length = w;
+                            planebuffer.get(data, channelOffset, length);
+                            channelOffset += length;
+                        } else {
+                            length = (w - 1) * pixelStride + 1;
+                            planebuffer.get(rowData, 0, length);
+                            for (int col = 0; col < w; col++) {
+                                data[channelOffset] = rowData[col * pixelStride];
+                                channelOffset += outputStride;
+                            }
+                        }
+                        if (row < h - 1) {
+                            planebuffer.position(planebuffer.position() + rowStride - length);
+                        }
+                    }
+                }
+
+//                Log.d(TAG,data.length+"");
+
+                //add codec input buffer
+                int iid = h264Encodec.dequeueInputBuffer(100);
+                if (iid>=0){
+
+                    //get the input buffer
+                    ByteBuffer iBuffer = h264Encodec.getInputBuffer(iid);
+                    iBuffer.clear();
+                    //our image data put into buffer
+                    iBuffer.put(data);
+
+                    //put buffer back to the original place
+                    h264Encodec.queueInputBuffer(iid,0,data.length,100,1);
+                }
+
+                MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
+                int outputBufferId = h264Encodec.dequeueOutputBuffer(bufferInfo,10000);
+                if (outputBufferId<0){
+                    Log.d(TAG,outputBufferId+"");
+                }
+
+                while (outputBufferId == -2) {
+                    outputBufferId = h264Encodec.dequeueOutputBuffer(bufferInfo,10000);
+
+                }
+
+                while(outputBufferId >= 0){
+                    //output buffer
+                    ByteBuffer outputBuffer = h264Encodec.getOutputBuffer(outputBufferId);
+                    outputBuffer.slice();
+
+                    byte[] outData = new byte[bufferInfo.size];
+                    outputBuffer.get(outData);
+
+                    //deal key frame v3.0
+                    if (bufferInfo.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG){
+                        //startSendH264 frame
+                        HeadInfo = new byte[outData.length];
+                        HeadInfo = outData;
+                        Log.d(TAG,"head");
+                    }else if (bufferInfo.flags%8 == MediaCodec.BUFFER_FLAG_KEY_FRAME){
+                        //key frame
+                        byte[] key = new byte[outData.length+HeadInfo.length];
+                        //param: src srcpos dec decpos length
+                        System.arraycopy(HeadInfo,0,key,0,HeadInfo.length);
+                        System.arraycopy(outData,0,key,HeadInfo.length,outData.length);
+                        //version 1.0
+                        //write key frame to h264
+                        try{
+                            H264fos.write(key, 0, key.length);
+                        }catch (IOException e){}
+                        Log.d(TAG,"key");
+                        //put key frame to queue
+                        //                        offerVideoQueue(key);
+                    }else if(bufferInfo.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM){
+                        //end frame
+                        Log.d(TAG,"end");
+                    }else{
+
+                        try{
+                            H264fos.write(outData, 0, outData.length);
+                        }catch (IOException e){}
+                        Log.d(TAG,"normal");
+                        //
+                        //                        offerVideoQueue(outData);
+                    }
+                    //release output buffer
+                    h264Encodec.releaseOutputBuffer(outputBufferId,false);
+                    Log.d(TAG,"release output");
+                    //change outputBufferId
+                    //to continue this while circle
+                    outputBufferId = h264Encodec.dequeueOutputBuffer(bufferInfo,0);
+                }
+
+
+//
+//                if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
+//                    Log.d(TAG,"changed");
+//                }else if(outputBufferId == MediaCodec.INFO_TRY_AGAIN_LATER){
+//                    Log.d(TAG,"try later");
+//                }else{
+//                    while (outputBufferId>=0){
+//                        //output buffer
+//                        ByteBuffer outputBuffer = h264Encodec.getOutputBuffer(outputBufferId);
+//                        outputBuffer.slice();
+//
+//                        byte[] outData = new byte[bufferInfo.size];
+//                        outputBuffer.get(outData);
+//
+//                        //deal key frame v3.0
+//                        if (bufferInfo.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG){
+//                            //startSendH264 frame
+//                            HeadInfo = new byte[outData.length];
+//                            HeadInfo = outData;
+//                            Log.d(TAG,"head");
+//                        }else if (bufferInfo.flags%8 == MediaCodec.BUFFER_FLAG_KEY_FRAME){
+//                            //key frame
+//                            byte[] key = new byte[outData.length+HeadInfo.length];
+//                            //param: src srcpos dec decpos length
+//                            System.arraycopy(HeadInfo,0,key,0,HeadInfo.length);
+//                            System.arraycopy(outData,0,key,HeadInfo.length,outData.length);
+//                            //version 1.0
+//                            //write key frame to h264
+//
+//                            try{
+//                                H264fos.write(key, 0, key.length);
+//                            }catch (IOException e){}
+//                            Log.d(TAG,"key");
+//                            //put key frame to queue
+//    //                        offerVideoQueue(key);
+//                        }else if(bufferInfo.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM){
+//                            //end frame
+//                            Log.d(TAG,"end");
+//                        }else{
+//
+//                            try{
+//                                H264fos.write(outData, 0, outData.length);
+//                            }catch (IOException e){}
+//                            Log.d(TAG,"normal");
+//
+//                            //
+//    //                        offerVideoQueue(outData);
+//
+//                        }
+//                        //release output buffer
+//                        h264Encodec.releaseOutputBuffer(outputBufferId,false);
+//                        //change outputBufferId
+//                        //to continue this while circle
+//                        outputBufferId = h264Encodec.dequeueOutputBuffer(bufferInfo,0);
+//                    }
+//                }
+            }
+            image.close();
+
+            //origin
+//            mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
+        }
     };
 
     /**
@@ -384,7 +596,7 @@ public class Camera2BasicFragment extends Fragment
      * @return The optimal {@code Size}, or an arbitrary one if none were big enough
      */
     private static Size chooseOptimalSize(Size[] choices, int textureViewWidth,
-            int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
+                                          int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
 
         // Collect the supported resolutions that are at least as big as the preview Surface
         List<Size> bigEnough = new ArrayList<>();
@@ -396,7 +608,7 @@ public class Camera2BasicFragment extends Fragment
             if (option.getWidth() <= maxWidth && option.getHeight() <= maxHeight &&
                     option.getHeight() == option.getWidth() * h / w) {
                 if (option.getWidth() >= textureViewWidth &&
-                    option.getHeight() >= textureViewHeight) {
+                        option.getHeight() >= textureViewHeight) {
                     bigEnough.add(option);
                 } else {
                     notBigEnough.add(option);
@@ -412,6 +624,7 @@ public class Camera2BasicFragment extends Fragment
             return Collections.max(notBigEnough, new CompareSizesByArea());
         } else {
             Log.e(TAG, "Couldn't find any suitable preview size");
+//            Log.d(TAG,choices[0].getWidth()+" size "+choices[0].getHeight());
             return choices[0];
         }
     }
@@ -428,8 +641,6 @@ public class Camera2BasicFragment extends Fragment
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
-        view.findViewById(R.id.picture).setOnClickListener(this);
-        view.findViewById(R.id.info).setOnClickListener(this);
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
     }
 
@@ -437,6 +648,16 @@ public class Camera2BasicFragment extends Fragment
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         mFile = new File(getActivity().getExternalFilesDir(null), "pic.jpg");
+
+
+        Button button = (Button)getActivity().findViewById(R.id.picture);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG,"clicked");
+                isRecord = true;
+            }
+        });
     }
 
     @Override
@@ -449,10 +670,12 @@ public class Camera2BasicFragment extends Fragment
         // a camera and start preview from here (otherwise, we wait until the surface is ready in
         // the SurfaceTextureListener).
         if (mTextureView.isAvailable()) {
+//            Log.d(TAG,"before open:"+mTextureView.getWidth()+"  "+ mTextureView.getHeight()+"");
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
         } else {
             mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         }
+
     }
 
     @Override
@@ -476,7 +699,7 @@ public class Camera2BasicFragment extends Fragment
                                            @NonNull int[] grantResults) {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.length != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                ErrorDialog.newInstance("This sample needs camera permission.")
+                ErrorDialog.newInstance(getString(R.string.request_permission))
                         .show(getChildFragmentManager(), FRAGMENT_DIALOG);
             }
         } else {
@@ -512,12 +735,17 @@ public class Camera2BasicFragment extends Fragment
 
                 // For still image captures, we use the largest available size.
                 Size largest = Collections.max(
-                        Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
+                        Arrays.asList(map.getOutputSizes(ImageFormat.YUV_420_888)),
                         new CompareSizesByArea());
+                Log.d(TAG,largest.getHeight()+" "+largest.getWidth());
                 mImageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(),
-                        ImageFormat.JPEG, /*maxImages*/2);
+                        ImageFormat.YUV_420_888, /*maxImages*/5);
+
                 mImageReader.setOnImageAvailableListener(
                         mOnImageAvailableListener, mBackgroundHandler);
+
+//                mImageReader.setOnImageAvailableListener(
+//                        mOnImageAvailableListener, null);
 
                 // Find out if we need to swap dimension to get the preview size relative to sensor
                 // coordinate.
@@ -570,6 +798,8 @@ public class Camera2BasicFragment extends Fragment
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                         rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
                         maxPreviewHeight, largest);
+
+
                 // We fit the aspect ratio of TextureView to the size of preview we picked.
                 int orientation = getResources().getConfiguration().orientation;
                 if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -584,6 +814,9 @@ public class Camera2BasicFragment extends Fragment
                 Boolean available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
                 mFlashSupported = available == null ? false : available;
 
+//                Log.d(TAG,"preview size"+mPreviewSize.getWidth()+""+mPreviewSize.getHeight());
+//                Log.d(TAG,"textureview size"+mTextureView.getWidth()+""+mTextureView.getHeight());
+
                 mCameraId = cameraId;
                 return;
             }
@@ -592,11 +825,30 @@ public class Camera2BasicFragment extends Fragment
         } catch (NullPointerException e) {
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
             // device this code runs.
-//            ErrorDialog.newInstance(getString(R.string.camera_error))
-//                    .show(getChildFragmentManager(), FRAGMENT_DIALOG);
+            ErrorDialog.newInstance(getString(R.string.camera_error))
+                    .show(getChildFragmentManager(), FRAGMENT_DIALOG);
         }
     }
 
+    //-----------------------------
+    private MediaCodec h264Encodec = null;
+    public void configH264EnCodec(){
+            MediaFormat mediaFormat = MediaFormat.createVideoFormat("video/avc", mPreviewSize.getWidth(), mPreviewSize.getHeight());
+            //synchronous
+            mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
+            mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, mPreviewSize.getWidth()*mPreviewSize.getHeight() *3);
+            mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 15);
+            mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
+            try{
+                h264Encodec = MediaCodec.createEncoderByType("video/avc");
+            }catch (IOException e){}
+            h264Encodec.configure(mediaFormat,null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+
+            h264Encodec.start();
+
+    }
+
+    //------------------------------------
     /**
      * Opens the camera specified by {@link Camera2BasicFragment#mCameraId}.
      */
@@ -608,6 +860,11 @@ public class Camera2BasicFragment extends Fragment
         }
         setUpCameraOutputs(width, height);
         configureTransform(width, height);
+
+        //mediacodec
+        configH264EnCodec();
+
+
         Activity activity = getActivity();
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
@@ -689,6 +946,9 @@ public class Camera2BasicFragment extends Fragment
                     = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             mPreviewRequestBuilder.addTarget(surface);
 
+            mPreviewRequestBuilder.addTarget(mImageReader.getSurface());
+            //
+
             // Here, we create a CameraCaptureSession for camera preview.
             mCameraDevice.createCaptureSession(Arrays.asList(surface, mImageReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
@@ -731,7 +991,7 @@ public class Camera2BasicFragment extends Fragment
     }
 
     /**
-     * Configures the necessary {@link Matrix} transformation to `mTextureView`.
+     * Configures the necessary {@link android.graphics.Matrix} transformation to `mTextureView`.
      * This method should be called after the camera preview size is determined in
      * setUpCameraOutputs and also the size of `mTextureView` is fixed.
      *
@@ -886,16 +1146,19 @@ public class Camera2BasicFragment extends Fragment
 
     @Override
     public void onClick(View view) {
+        Log.d(TAG,"record");
         switch (view.getId()) {
             case R.id.picture: {
-                takePicture();
+                Log.d(TAG,"record");
+                isRecord = true;
+//                takePicture();
                 break;
             }
             case R.id.info: {
                 Activity activity = getActivity();
                 if (null != activity) {
                     new AlertDialog.Builder(activity)
-                            .setMessage("intro")
+                            .setMessage(R.string.intro_message)
                             .setPositiveButton(android.R.string.ok, null)
                             .show();
                 }
@@ -1009,7 +1272,7 @@ public class Camera2BasicFragment extends Fragment
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             final Fragment parent = getParentFragment();
             return new AlertDialog.Builder(getActivity())
-                    .setMessage("permission")
+                    .setMessage(R.string.request_permission)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -1031,5 +1294,10 @@ public class Camera2BasicFragment extends Fragment
                     .create();
         }
     }
+
+
+    //---------------------------------mediacodec
+//    class
+
 
 }

@@ -14,48 +14,67 @@ public class SendH264 {
     private VideoActivity2 mainAC;
     private Socket send;
     private OutputStream sendStream;
+    private SendThread sendThread;
 
     public SendH264(VideoActivity2 v){
         Log.d("sssssssssssssssssssss","send h264s");
         this.mainAC = v;
+        sendThread = new SendThread();
     }
     private boolean isSendingH264 = false;
     public void setSendH264Status(boolean value){
         isSendingH264 = value;
     }
     public void startSendH264(){
-        new sendSocket().start();
+        sendThread.start();
     }
+    public void connectToBox(){
+        sendThread.connectToBox();
+    }
+    public void connectToPhone(){
+        sendThread.connectToPhone();
+    }
+
     //get data frome queue
-    private class sendSocket extends Thread{
+    private class SendThread extends Thread{
+        public void connectToBox(){
+            try{
+                send = new Socket("10.1.1.1",8888);
+                Log.d("qqqqqqqqqqq","success");
+//                send = new Socket("10.1.1.1",8888);//obu
+                sendStream = send.getOutputStream();
+            }catch (IOException e){
+                Log.d("qqqqqqqqqqqqqqqqqqqqqqq","worong");
+            }
+        }
+        public void connectToPhone(){
+            try{
+                send = new Socket("10.105.38.183",8888);
+                Log.d("qqqqqqqqqqq","success");
+//                send = new Socket("10.1.1.1",8888);//obu
+                sendStream = send.getOutputStream();
+            }catch (IOException e){
+                Log.d("qqqqqqqqqqqqqqqqqqqqqqq","worong");
+            }
+        }
+
         @Override
         public void run() {
             super.run();
 
-            Log.d("sssssssssssssssssssss","start socket");
             try{
-//                send = new Socket("10.105.36.224",8888);
-//                send = new Socket("10.105.36.59",18888);
-//                send = new Socket("10.202.0.197",18888);//phone
-                send = new Socket("10.202.1.77",18888);//phone
-                send = new Socket("192.168.12.91",18888);//phone
-                Log.d("sssssssssssssssssssss","success");
+                send = new Socket("10.1.1.1",8888);
+                Log.d("qqqqqqqqqqq","success");
 //                send = new Socket("10.1.1.1",8888);//obu
                 sendStream = send.getOutputStream();
             }catch (IOException e){
-                Log.d("sssssssssssssssssssss","worong");
+                Log.d("qqqqqqqqqqqqqqqqqqqqqqq","worong");
             }
 
-
-            Log.d("sssssssssssssssssssss","send");
             while(true){
                 if (!mainAC.getH264SendQueue().isEmpty()){
                     //
                     Log.d("H264","get one");
-
-                    //test
-//                    byte[] b = new byte[3];
-//                    b[0] = b[1]= b[2] = 'c';
                     try{
                     //maybe wrong
                         byte[] tmp = (byte[])mainAC.getH264SendQueue().poll();

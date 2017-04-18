@@ -60,9 +60,6 @@ public class MainActivity extends AppCompatActivity{
 
 
 
-        //audio send thread
-//        mAudioSendTH = new Thread(new AudioSendRun());
-//        mAudioSendTH.start();
 
     }
 

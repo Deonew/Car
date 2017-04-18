@@ -39,9 +39,7 @@
 
         <!--video-->
         <activity android:name=".Video.VideoActivity2"/>
+        <activity android:name=".Video.VideoActivity3"/>
 
     </application>
-
-
-
 </manifest>

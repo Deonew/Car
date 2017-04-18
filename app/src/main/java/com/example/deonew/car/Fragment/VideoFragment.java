@@ -11,6 +11,7 @@ import android.widget.Button;
 
 import com.example.deonew.car.R;
 import com.example.deonew.car.Video.VideoActivity2;
+import com.example.deonew.car.Video.VideoActivity3;
 
 /**
  * Created by deonew on 17-4-5.
@@ -46,11 +47,25 @@ public class VideoFragment extends Fragment{
                 toVideoActivity(v);
             }
         });
+        Button button1 = (Button)getActivity().findViewById(R.id.toVideo3);
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toVideoActivity3(v);
+            }
+        });
+
     }
 
     public void toVideoActivity(View v){
         Intent it = new Intent();
         it.setClass(getActivity(),VideoActivity2.class);
+        startActivity(it);
+        getActivity().finish();
+    }
+    public void toVideoActivity3(View v){
+        Intent it = new Intent();
+        it.setClass(getActivity(),VideoActivity3.class);
         startActivity(it);
         getActivity().finish();
     }

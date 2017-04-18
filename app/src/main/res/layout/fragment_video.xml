@@ -15,4 +15,10 @@
         android:text="jump"
         android:id="@+id/toVideo"
         android:onClick="toVideoActivity"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="v3"
+        android:id="@+id/toVideo3" />
 </LinearLayout>

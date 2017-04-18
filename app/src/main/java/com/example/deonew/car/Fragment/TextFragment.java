@@ -6,6 +6,7 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ import java.net.Socket;
  */
 
 public class TextFragment extends Fragment{
+    public String TAG = "TEXTFRAGMENT";
     //thread
     private sendTextRun mSendTextRun;
 
@@ -56,6 +58,7 @@ public class TextFragment extends Fragment{
         //send thread
         mSendTextRun = new sendTextRun();
         new Thread(mSendTextRun).start();
+        Log.d(TAG,"start");
 
         //
 //        Looper.prepare();
@@ -64,6 +67,7 @@ public class TextFragment extends Fragment{
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
 
+                Log.d(TAG,"rece");
 //                getActivity().getHa8
 //                showRecv.append("recv");
 //                showRecv.post(new Runnable(){
@@ -145,7 +149,8 @@ public class TextFragment extends Fragment{
 
                     //socket send
                     try {
-                        Socket socket = new Socket("10.105.39.47",20001);
+//                        Socket socket = new Socket("10.105.39.47",20001);
+                        Socket socket = new Socket("10.105.36.224 ",20001);
                         DataOutputStream os =  new DataOutputStream(socket.getOutputStream());
                         os.writeUTF(s);
                     } catch (IOException e) {
@@ -155,10 +160,14 @@ public class TextFragment extends Fragment{
                     //
                     isSendText = false;
                 }
-
                 if (isRecvText){
+                    Log.d(TAG,"success");
                     try {
-                        Socket socket = new Socket("10.105.39.47",20001);
+//                        Socket socket = new Socket("10.105.39.47",20001);
+//                        Socket socket = new Socket("192.168.1.109",20001);
+                        Socket socket = new Socket("10.105.36.224 ",20001);
+
+                        socket.close();
 //                        DataInputStream is =  new DataInputStream(socket.getInputStream());
 
                         //get text data
