@@ -36,7 +36,6 @@ public class VideoActivity3 extends Activity {
             if (i == n){
                 len = b.length - i*1000;
             }
-            //b.length = 1000,2000
             if (len == 0)
                 break;
             byte[] tmp = new byte[len];
