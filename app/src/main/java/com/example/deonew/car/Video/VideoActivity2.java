@@ -453,8 +453,6 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
                         //get the input buffer
                         ByteBuffer iBuffer = h264Encodec.getInputBuffer(iid);
                         iBuffer.clear();
-
-                        Log.d(TAG,iBuffer.capacity()+" "+data.length);
                         //our image data put into buffer
                         iBuffer.put(data);
 
