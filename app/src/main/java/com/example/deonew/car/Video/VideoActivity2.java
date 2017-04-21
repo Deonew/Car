@@ -183,6 +183,7 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
         setContentView(R.layout.activity_video2);
 
         videoStatus = (TextView)findViewById(R.id.videoRecStatus);
+        videoStatus = (TextView)findViewById(R.id.videoRecStatus);
         audioStatus = (TextView)findViewById(R.id.audioRecStatus);
         sendH264Status = (TextView)findViewById(R.id.sendH264Status);
         ipinfo = (TextView)findViewById(R.id.ipinfo);

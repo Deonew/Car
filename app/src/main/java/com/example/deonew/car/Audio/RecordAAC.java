@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 
 public class RecordAAC {
     private AudioActivity2 mAudioAC;
+
     //audio
     private FileOutputStream audioFos;
     private String audioPath = Environment.getExternalStorageDirectory() + "/carTemp.aac";

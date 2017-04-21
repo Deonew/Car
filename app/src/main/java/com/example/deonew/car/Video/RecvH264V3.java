@@ -10,16 +10,23 @@ import java.net.Socket;
  * Created by deonew on 4/14/17.
  */
 
-public class RecvH264 {
-    private VideoActivity2 mVideoAC;
-    public RecvH264(VideoActivity2 ac){
+
+public class RecvH264V3 {
+    private final  String TAG = "RecvH264V3";
+    private VideoActivity3 mVideoAC;
+    public RecvH264V3(VideoActivity3 ac){
         //
         mVideoAC = ac;
+
     }
     public void startRecvH264(){
-        //mediacodec
+
         //recv thread
-        new recvSocketThread().start();
+        isRecv = true;
+        if (isRecv){
+            new recvSocketThread().start();
+        }
+
     }
 
     private boolean isRecv = false;
@@ -32,8 +39,7 @@ public class RecvH264 {
                 recvSocket = new Socket("10.105.36.224",18888);
 //                recvSocket = new Socket("192.168.1.105",18888);
 //                        recvSocket = new Socket("10.1.1.1",8888);
-                Log.d("ssssssssssssssss","okay");
-                Log.d("ssssssssssssssss","okay");
+                Log.d(TAG,"okay");
                 InputStream ins = recvSocket.getInputStream();
                 mVideoAC.getH264RecvQueue().clear();
                 while(true){
@@ -41,16 +47,16 @@ public class RecvH264 {
                         byte[] readByte = new byte[2000];
                         int n;
                         while((n = ins.read(readByte))!=-1){
-                            Log.d("ssssssssssss","receive");
+                            Log.d(TAG,"receive");
                             byte[] toOffer = new byte[n];
                             System.arraycopy(readByte,0,toOffer,0,n);
                             mVideoAC.getH264RecvQueue().offer(toOffer);
-                            Log.d("ssssssssssssssss",""+mVideoAC.getH264RecvQueue().size());
+                            Log.d(TAG,""+mVideoAC.getH264RecvQueue().size());
                         }
                     }
                 }
             }catch (IOException e){
-                Log.d("ssssssssssssssss","wrong");
+                Log.d(TAG,"wrong");
             }
         }
     }

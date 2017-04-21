@@ -147,11 +147,13 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture texture, int width, int height) {
+            Log.d(TAG,"surface available");
             openCamera(width, height);
         }
 
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture texture, int width, int height) {
+            Log.d(TAG,"surface size changed");
             configureTransform(width, height);
         }
 
@@ -198,6 +200,7 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
+            Log.d(TAG,"camera opened");
             // This method is called when the camera is opened.  We start camera preview here.
             mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
@@ -206,6 +209,7 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onDisconnected(@NonNull CameraDevice cameraDevice) {
+            Log.d(TAG,"camera disconnected");
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
@@ -213,6 +217,7 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onError(@NonNull CameraDevice cameraDevice, int error) {
+            Log.d(TAG,"camera error");
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
@@ -260,6 +265,7 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onImageAvailable(ImageReader reader) {
+            Log.d(TAG,"image available");
 
             //origin
 //            mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
@@ -412,6 +418,7 @@ public class Camera2BasicFragment extends Fragment
      */
     private static Size chooseOptimalSize(Size[] choices, int textureViewWidth,
                                           int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
+        Log.d(TAG,"chooseOptimalSize");
 
         // Collect the supported resolutions that are at least as big as the preview Surface
         List<Size> bigEnough = new ArrayList<>();
@@ -445,27 +452,31 @@ public class Camera2BasicFragment extends Fragment
     }
 
     public static Camera2BasicFragment newInstance() {
+        Log.d(TAG, "instance");
         return new Camera2BasicFragment();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.d(TAG, "oncreateview");
         return inflater.inflate(R.layout.fragment_camera2_basic, container, false);
     }
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
+        Log.d(TAG, "onviewcreated");
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
+        Log.d(TAG, "ac created");
         super.onActivityCreated(savedInstanceState);
         mFile = new File(getActivity().getExternalFilesDir(null), "pic.jpg");
 
 
-        Button button = (Button)getActivity().findViewById(R.id.picture);
+        Button button = (Button)getActivity().findViewById(R.id.record);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -473,10 +484,18 @@ public class Camera2BasicFragment extends Fragment
                 isRecord = true;
             }
         });
+        Button sendBtn = (Button)getActivity().findViewById(R.id.sendBtn);
+        sendBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mVideoAC3.sendStart();
+            }
+        });
     }
 
     @Override
     public void onResume() {
+        Log.d(TAG, "on resume");
         super.onResume();
         startBackgroundThread();
 
@@ -495,12 +514,14 @@ public class Camera2BasicFragment extends Fragment
 
     @Override
     public void onPause() {
+        Log.d(TAG, "on pause");
         closeCamera();
         stopBackgroundThread();
         super.onPause();
     }
 
     private void requestCameraPermission() {
+        Log.d(TAG, "requestCameraPermission");
         if (FragmentCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
         } else {
             FragmentCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
@@ -511,6 +532,7 @@ public class Camera2BasicFragment extends Fragment
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+        Log.d(TAG, "onRequestPermissionsResult");
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.length != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
 
@@ -527,6 +549,7 @@ public class Camera2BasicFragment extends Fragment
      * @param height The height of available size for camera preview
      */
     private void setUpCameraOutputs(int width, int height) {
+        Log.d(TAG, "setUpCameraOutputs");
         Activity activity = getActivity();
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
@@ -678,6 +701,8 @@ public class Camera2BasicFragment extends Fragment
      * Opens the camera specified by {@link Camera2BasicFragment#mCameraId}.
      */
     private void openCamera(int width, int height) {
+        Log.d(TAG,"opencamera");
+
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             requestCameraPermission();
@@ -708,6 +733,7 @@ public class Camera2BasicFragment extends Fragment
      * Closes the current {@link CameraDevice}.
      */
     private void closeCamera() {
+        Log.d(TAG,"closecamera");
         try {
             mCameraOpenCloseLock.acquire();
             if (null != mCaptureSession) {
@@ -733,6 +759,7 @@ public class Camera2BasicFragment extends Fragment
      * Starts a background thread and its {@link Handler}.
      */
     private void startBackgroundThread() {
+        Log.d(TAG,"startBackgroundThread");
         mBackgroundThread = new HandlerThread("CameraBackground");
         mBackgroundThread.start();
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
@@ -742,6 +769,7 @@ public class Camera2BasicFragment extends Fragment
      * Stops the background thread and its {@link Handler}.
      */
     private void stopBackgroundThread() {
+        Log.d(TAG,"stopBackgroundThread");
         mBackgroundThread.quitSafely();
         try {
             mBackgroundThread.join();
@@ -756,6 +784,7 @@ public class Camera2BasicFragment extends Fragment
      * Creates a new {@link CameraCaptureSession} for camera preview.
      */
     private void createCameraPreviewSession() {
+        Log.d(TAG,"createCameraPreviewSession");
         try {
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
@@ -824,6 +853,7 @@ public class Camera2BasicFragment extends Fragment
      * @param viewHeight The height of `mTextureView`
      */
     private void configureTransform(int viewWidth, int viewHeight) {
+        Log.d(TAG,"configureTransform");
         Activity activity = getActivity();
         if (null == mTextureView || null == mPreviewSize || null == activity) {
             return;
@@ -872,6 +902,7 @@ public class Camera2BasicFragment extends Fragment
      * we get a response in {@link #mCaptureCallback} from {@link #lockFocus()}.
      */
     private void runPrecaptureSequence() {
+        Log.d(TAG,"runPrecaptureSequence");
         try {
             // This is how to tell the camera to trigger.
             mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER,
@@ -890,6 +921,7 @@ public class Camera2BasicFragment extends Fragment
      * {@link #mCaptureCallback} from both {@link #lockFocus()}.
      */
     private void captureStillPicture() {
+        Log.d(TAG,"captureStillPicture");
         try {
             final Activity activity = getActivity();
             if (null == activity || null == mCameraDevice) {
@@ -968,12 +1000,14 @@ public class Camera2BasicFragment extends Fragment
     public void onClick(View view) {
         Log.d(TAG,"record");
         switch (view.getId()) {
-            case R.id.picture: {
-                Log.d(TAG,"record");
-                isRecord = true;
+//            case R.id.picture: {
+//                Log.d(TAG,"record");
+//                isRecord = true;
 //                takePicture();
+//                break;
+//            }
+            default:
                 break;
-            }
         }
     }
 
@@ -1189,6 +1223,7 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public int compare(Size lhs, Size rhs) {
+            Log.d(TAG,"compare");
             // We cast here to ensure the multiplications won't overflow
             return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
                     (long) rhs.getWidth() * rhs.getHeight());
@@ -1197,6 +1232,7 @@ public class Camera2BasicFragment extends Fragment
     }
 
 
+    private VideoActivity3 mVideoAC3 ;
     class H264Encode{
         private MediaCodec mH264Encodec = null;
         public H264Encode(){
@@ -1204,6 +1240,7 @@ public class Camera2BasicFragment extends Fragment
         }
         //b =
         public void code(Image image){
+            Log.d(TAG,"data come");
 
             if (!isEncodeConfigured){
                 ImageWidth = image.getWidth();
@@ -1218,6 +1255,9 @@ public class Camera2BasicFragment extends Fragment
                     H264fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/carTemp.h264",true);
                 }catch (FileNotFoundException e){
                 }
+            }
+            if (mVideoAC3 == null){
+                mVideoAC3 = (VideoActivity3)getActivity();
             }
 
 //            Log.d(TAG,"size:"+image.getWidth()+"   "+image.getHeight());
@@ -1362,6 +1402,7 @@ public class Camera2BasicFragment extends Fragment
                             H264fos.write(key, 0, key.length);
                         } catch (IOException e) {
                         }
+                        mVideoAC3.offerSendH264Queue(key);
                         Log.d(TAG, "key");
                         //put key frame to queue
                         //                        offerVideoQueue(key);
@@ -1375,7 +1416,9 @@ public class Camera2BasicFragment extends Fragment
                         } catch (IOException e) {
                         }
                         Log.d(TAG, "normal");
-                        //offerVideoQueue(outData);
+//                        offerVideoQueue(outData);
+
+                        mVideoAC3.offerSendH264Queue(outData);
                     }
                     //release output buffer
                     h264Encodec.releaseOutputBuffer(outputBufferId, false);
