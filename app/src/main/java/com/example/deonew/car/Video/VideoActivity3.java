@@ -25,9 +25,10 @@ public class VideoActivity3 extends FragmentActivity {
         setContentView(R.layout.activity_video3);
 
         //camera preview fragment
+        camera2BasicFragment = Camera2BasicFragment.newInstance();
         if (null == savedInstanceState) {
             getFragmentManager().beginTransaction()
-                    .replace(R.id.cameraPreview, Camera2BasicFragment.newInstance())
+                    .replace(R.id.cameraPreview, camera2BasicFragment)
                     .commit();
         }
 
@@ -54,16 +55,32 @@ public class VideoActivity3 extends FragmentActivity {
                 startRecvH264();
             }
         });
-        Button sendBtn = (Button)findViewById(R.id.playH264V3);
-        sendBtn.setOnClickListener(new View.OnClickListener() {
+        Button playBtn = (Button)findViewById(R.id.playH264V3);
+        playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG,"play clicked");
+                Log.d(TAG,"playBtn clicked");
                 startPlay();
             }
         });
-    }
+        Button recordBtn = (Button)findViewById(R.id.record);
+        recordBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG,"recordBtn clicked");
+                startRecord();
+            }
+        });
 
+        Button sendBtn = (Button)findViewById(R.id.sendBtn);
+        sendBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG,"sendBtn clicked");
+                startSend();
+            }
+        });
+    }
 
     //h264 data queue
     private BlockingQueue<byte[]> H264SendQueue = new ArrayBlockingQueue<byte[]>(10000);
@@ -90,7 +107,7 @@ public class VideoActivity3 extends FragmentActivity {
     //send h264
     private SendH264V3 sendH264V3;
     private boolean isSendH264 = false;
-    public void sendStart(){
+    public void startSend(){
         Log.d(TAG,"ac3 send start");
         isSendH264 = true;
         sendH264V3.startSendH264();
@@ -189,5 +206,16 @@ public class VideoActivity3 extends FragmentActivity {
         }
         return nextIndex;
     }
+
+
+    //record
+    public void startRecord(){
+        camera2BasicFragment.startRecord();
+    }
+    //send
+//    public void startSend(){
+//        startSend();
+//    }
+
 
 }

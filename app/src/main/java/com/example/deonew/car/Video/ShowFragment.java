@@ -1,8 +1,11 @@
 package com.example.deonew.car.Video;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.media.Image;
 import android.media.MediaCodec;
+import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -11,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -94,9 +98,11 @@ public class ShowFragment extends Fragment {
                     mediaformat.setByteBuffer("csd-0", ByteBuffer.wrap(header_sps));
                     mediaformat.setByteBuffer("csd-1", ByteBuffer.wrap(header_pps));
                 }
-                //设置帧率
                 mediaformat.setInteger(MediaFormat.KEY_FRAME_RATE, PlayFrameRate);
+                //set output image format
+                mediaformat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
                 mPlayCodec.configure(mediaformat, holder.getSurface(), null, 0);
+//                mPlayCodec.configure(mediaformat, null, null, 0);
                 mPlayCodec.start();
             }
             @Override
@@ -139,33 +145,81 @@ public class ShowFragment extends Fragment {
                     int outIndex = mPlayCodec.dequeueOutputBuffer(info, timeoutUs);
                     Log.d(TAG,"get output");
 
-                    if (outIndex<0){
-                        Log.d(TAG,outIndex+"");//-1
-                        continue;
-                    }
+//                    if (outIndex<0){
+//                        Log.d(TAG,outIndex+"");//-1
+//                        continue;
+//                    }
+
                     if (outIndex >= 0) {
-                        while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - startMs) {
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        Image im = mPlayCodec.getOutputImage(outIndex);
+//                        while (info.presentationTimeUs / 1000 > System.currentTimeMillis() - startMs) {
+//                            try {
+//                                Thread.sleep(100);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                        boolean doRende = (info.size != 0);
+//                        if (doRende){
+                            Image image = mPlayCodec.getOutputImage(outIndex);
+                            Log.d(TAG,"  format"+image.getFormat());
+//                        Bitmap bitmap = new Bitmap();
+//                        SurfaceView s = (SurfaceView) getActivity().findViewById(R.id.videoSurfaceView);
+
+//                        TextureView t = (TextureView) getActivity().findViewById(R.id.playTextureView);
+//                        t.getSurfaceTexture().updateTexImage();
+
+//                        s.getHolder().getSurface()
+//s
+//                            Image im = mPlayCodec.getOutputImage(outIndex);
+//                            Log.d(TAG,"  format"+im.getWidth());
+//                            if (im == null){
+//                                Log.d(TAG,"image null");
+//                            }else {
+//                                Log.d(TAG,"image not null");
+//                            }
+//                        }
+//                        if (!doRende){
+//                            Log.d(TAG,"nnnnn");
+//                            break;
+//                        }
+//                        Log.d(TAG,"aa");
+
+//                        Image im = null;
+
+//                        Log.d(TAG,"  format"+im.getWidth());
+
+
+//                        im.close();
+
+
+//                        Image image = mPlayCodec.getOutputImage(outIndex);
+//                        Image.Plane[] planes = image.getPlanes();
+
+//                        Rect crop = im.getCropRect();
+//                        im.close();
+//                        Image image = decoder.getOutputImage(outputBufferId);
+
+//                        Log.d(TAG,"  format"+im.getWidth());
 //                        im.getFormat();
+                        ByteBuffer outputBuffer = mPlayCodec.getOutputBuffer(outIndex);
+                        outputBuffer.position(info.offset);
+                        outputBuffer.limit(info.offset + info.size);
+                        Log.d(TAG,"length"+info.offset + info.size);
 
 
-//                        Log.d(TAG,"  format"+im.getFormat());
+//                        outputBuffer.get(outData);
+
 
                         boolean doRender = (info.size != 0);
                         mPlayCodec.releaseOutputBuffer(outIndex, doRender);
-                        Log.e(TAG, "no output");
+                        Log.d(TAG, "no output");
                         try {
-                            Log.e(TAG, "sleep");
+                            Log.d(TAG, "sleep");
                             Thread.sleep(10);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+
                     } else {
 
                     }
@@ -173,8 +227,4 @@ public class ShowFragment extends Fragment {
             }
         }
     }
-
-
-    
-
 }

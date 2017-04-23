@@ -18,12 +18,8 @@ package com.example.deonew.car.Video.camera;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
@@ -165,7 +161,6 @@ public class Camera2BasicFragment extends Fragment
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture texture) {
         }
-
     };
 
     /**
@@ -251,7 +246,7 @@ public class Camera2BasicFragment extends Fragment
 
     private byte[] HeadInfo = null;
     private FileOutputStream H264fos = null;
-    private boolean isRecord = false;
+//    private boolean isRecord = false;
 
     private boolean isEncodeConfigured = false;
     private int ImageWidth = 0;
@@ -488,7 +483,7 @@ public class Camera2BasicFragment extends Fragment
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mVideoAC3.sendStart();
+                mVideoAC3.startSend();
             }
         });
     }
@@ -1228,9 +1223,12 @@ public class Camera2BasicFragment extends Fragment
             return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
                     (long) rhs.getWidth() * rhs.getHeight());
         }
-
     }
 
+    private boolean isRecord = false;
+    public void startRecord(){
+        isRecord = true;
+    }
 
     private VideoActivity3 mVideoAC3 ;
     class H264Encode{
@@ -1238,7 +1236,6 @@ public class Camera2BasicFragment extends Fragment
         public H264Encode(){
             //
         }
-        //b =
         public void code(Image image){
             Log.d(TAG,"data come");
 
@@ -1322,10 +1319,6 @@ public class Camera2BasicFragment extends Fragment
                         }
                     }
                 }
-//                Log.d("ssssssssssss",width+"picture"+height);
-
-//                mH264Encode.code(data);
-
 
                 Log.d(TAG,"data come");
                 if (!isRecord){

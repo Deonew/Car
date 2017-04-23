@@ -24,7 +24,7 @@ public class SendH264V3 {
     private SendThread sendThread;
 
     public SendH264V3(VideoActivity3 v){
-        Log.d("sssssssssssssssssssss","send h264s");
+        Log.d(TAG,"send h264s");
         this.mainAC = v;
         sendThread = new SendThread();
     }
