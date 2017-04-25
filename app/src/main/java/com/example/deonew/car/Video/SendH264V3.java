@@ -71,7 +71,8 @@ public class SendH264V3 {
 
             try{
 //                send = new Socket("10.1.1.1",8888);
-                send = new Socket("10.105.36.224",18888);
+//                send = new Socket("10.105.36.224",18888);
+                send = new Socket(mainAC.getSendIP(),18888);
                 Log.d(TAG,"success");
 //                send = new Socket("10.1.1.1",8888);//obu
                 sendStream = send.getOutputStream();

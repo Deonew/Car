@@ -4,21 +4,28 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
-import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
+import com.example.deonew.car.Audio.AudioFragmentV3;
+import com.example.deonew.car.Audio.AudioSocketWrapper;
 import com.example.deonew.car.R;
 import com.example.deonew.car.Video.camera.Camera2BasicFragment;
 
+import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 public class VideoActivity3 extends FragmentActivity {
     private final String TAG = "VideoActivity3";
 
+
     private ShowFragment showFragment;
+    private AudioFragmentV3 audioFragmentV3;
     private Camera2BasicFragment camera2BasicFragment;
+    private AudioSocketWrapper audioSocketWrapper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,6 +44,9 @@ public class VideoActivity3 extends FragmentActivity {
         showFragment = new ShowFragment();
         fragmentManager.beginTransaction().add(R.id.showView,showFragment).commit();
 
+        audioFragmentV3 = new AudioFragmentV3();
+        fragmentManager.beginTransaction().add(R.id.audioControlFragment,audioFragmentV3).commit();
+
 //        SurfaceView sv = (SurfaceView) findViewById(R.id.videoPlay);
 //        showFragment.initMediaCodec();
 //        showFragment.initMediaCodec(sv);
@@ -46,6 +56,8 @@ public class VideoActivity3 extends FragmentActivity {
 
         recvH264V3= new RecvH264V3(this);
 
+
+        audioSocketWrapper = new AudioSocketWrapper(this);
 
         Button button = (Button)findViewById(R.id.recvH264V3);
         button.setOnClickListener(new View.OnClickListener() {
@@ -60,7 +72,7 @@ public class VideoActivity3 extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 Log.d(TAG,"playBtn clicked");
-                startPlay();
+                startH264Play();
             }
         });
         Button recordBtn = (Button)findViewById(R.id.record);
@@ -77,10 +89,47 @@ public class VideoActivity3 extends FragmentActivity {
             @Override
             public void onClick(View v) {
                 Log.d(TAG,"sendBtn clicked");
-                startSend();
+                startSendH264();
             }
         });
+        final Button setSendBtn = (Button)findViewById(R.id.setSendBtn);
+        setSendBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG,"set sendBtn clicked");
+                setSendIP();
+//                startSendH264();
+            }
+        });
+
+
+
+
+
+
+        editText = (EditText)findViewById(R.id.sendEditText);
     }
+
+
+    private EditText editText;
+    private String sendIP = "10.1.1.1";
+    private String recvIP = "10.1.1.1";
+    public void setSendIP(){
+        //get editbox string
+        String s = editText.getText().toString();
+        sendIP = s;
+        Log.d(TAG,"send ip set" + s);
+    }
+    public String getSendIP(){
+        return sendIP;
+    }
+    public void setRecvIP(String s){
+        recvIP = s;
+    }
+    public String getRecvIP(){
+        return recvIP;
+    }
+
 
     //h264 data queue
     private BlockingQueue<byte[]> H264SendQueue = new ArrayBlockingQueue<byte[]>(10000);
@@ -107,12 +156,11 @@ public class VideoActivity3 extends FragmentActivity {
     //send h264
     private SendH264V3 sendH264V3;
     private boolean isSendH264 = false;
-    public void startSend(){
+    public void startSendH264(){
         Log.d(TAG,"ac3 send start");
         isSendH264 = true;
         sendH264V3.startSendH264();
     }
-
 
     private RecvH264V3 recvH264V3 = null;
     private boolean isRecvH264 = false;
@@ -124,7 +172,7 @@ public class VideoActivity3 extends FragmentActivity {
     }
 
     //
-    public void startPlay(){
+    public void startH264Play(){
         showFragment.startPlay();
     }
 
@@ -207,15 +255,74 @@ public class VideoActivity3 extends FragmentActivity {
         return nextIndex;
     }
 
-
     //record
     public void startRecord(){
         camera2BasicFragment.startRecord();
     }
-    //send
-//    public void startSend(){
-//        startSend();
-//    }
+
+
+    //--------------------audio record
+    public void startRecordAAC(){
+//        audioFragmentV3.sta
+    }
+
+
+    //------------------------------------aac send
+    public void startSendAAC(){
+        audioSocketWrapper.startSend();
+    }
+    private BlockingQueue<byte[]> AACSendQueue = new ArrayBlockingQueue<byte[]>(10000);
+    public BlockingQueue getAACSendQueue(){
+        return AACSendQueue;
+    }
+
+    public void offerAudioSendQueue(byte[] b){
+        int n = b.length/1000;
+        for(int i = 0;i< n+1;i++){
+            int len = 1000;
+            if (i == n){
+                len = b.length - i*1000;
+            }
+            if (len == 0)
+                break;
+            byte[] tmp = new byte[len];
+            System.arraycopy(b,i*1000,tmp,0,len);
+            getAACSendQueue().offer(tmp);
+            i++;
+        }
+    }
+
+    //---------------------------------------------------aac recv
+    private BlockingQueue<byte[]> AACRecvQueue = new ArrayBlockingQueue<byte[]>(10000);
+    public BlockingQueue<byte[]> getAACRecvQueue() {
+        return AACRecvQueue;
+    }
+    public void offerAudioRecvQueue(byte[] b){
+        int n = b.length/1000;
+        for(int i = 0;i< n+1;i++){
+            int len = 1000;
+            if (i == n){
+                len = b.length - i*1000;
+            }
+            if (len == 0)
+                break;
+            byte[] tmp = new byte[len];
+            System.arraycopy(b,i*1000,tmp,0,len);
+            getAACRecvQueue().offer(tmp);
+            i++;
+        }
+    }
+
+
+    //audio socket
+    private Socket audioSocket = null;
+    public Socket getAudioSocket(){
+        return audioSocket;
+    }
+    public void setAudioSocket(Socket s){
+        audioSocket = s;
+    }
+
 
 
 }

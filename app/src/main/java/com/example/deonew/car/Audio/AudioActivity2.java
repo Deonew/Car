@@ -38,8 +38,6 @@ public class AudioActivity2 extends Activity{
         sendAAC.startSendAAC();
     }
 
-
-
     public void setSendAacStatus(boolean value){
         isSendingAac = value;
         sendAAC.setSendAacStatus(value);
@@ -54,7 +52,7 @@ public class AudioActivity2 extends Activity{
 
     //
     public void playAac(View v){
-        PlayRecvAAC audioDecoder = new PlayRecvAAC(this);
+        PlayAAC audioDecoder = new PlayAAC(this);
         audioDecoder.start();
     }
     private RecordAAC recordAAC;
@@ -91,8 +89,6 @@ public class AudioActivity2 extends Activity{
             i++;
         }
     }
-
-
     //---------------------------------------------------aac recv
     private BlockingQueue<byte[]> AACRecvQueue = new ArrayBlockingQueue<byte[]>(10000);
     public BlockingQueue<byte[]> getAACRecvQueue() {
@@ -114,6 +110,3 @@ public class AudioActivity2 extends Activity{
         }
     }
 }
-
-
-

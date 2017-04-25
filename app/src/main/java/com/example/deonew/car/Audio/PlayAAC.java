@@ -19,19 +19,19 @@ import java.util.concurrent.BlockingQueue;
 
 import static android.media.MediaCodec.INFO_TRY_AGAIN_LATER;
 
-public class PlayRecvAAC {
+public class PlayAAC {
 
-    private static final String TAG = "PlayRecvAAC";
+    private static final String TAG = "PlayAAC";
     public static final int KEY_CHANNEL_COUNT = 0;
     private Worker mWorker;
     private String path;//aac文件的路径。
 
-    public PlayRecvAAC(String filename) {
+    public PlayAAC(String filename) {
         this.path = filename;
         readFile();
     }
     AudioActivity2 mAudioAC = null;
-    public PlayRecvAAC(AudioActivity2 ac) {
+    public PlayAAC(AudioActivity2 ac) {
         mAudioAC = ac;
     }
 

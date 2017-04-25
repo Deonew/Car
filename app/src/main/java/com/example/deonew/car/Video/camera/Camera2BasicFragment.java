@@ -483,7 +483,7 @@ public class Camera2BasicFragment extends Fragment
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mVideoAC3.startSend();
+                mVideoAC3.startSendH264();
             }
         });
     }
@@ -1410,7 +1410,6 @@ public class Camera2BasicFragment extends Fragment
                         }
                         Log.d(TAG, "normal");
 //                        offerVideoQueue(outData);
-
                         mVideoAC3.offerSendH264Queue(outData);
                     }
                     //release output buffer

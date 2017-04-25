@@ -9,8 +9,9 @@ import android.media.MediaRecorder;
 import android.os.Environment;
 import android.util.Log;
 
+import com.example.deonew.car.Video.VideoActivity3;
+
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -20,9 +21,9 @@ import java.nio.ByteBuffer;
  * Created by deonew on 4/16/17.
  */
 
-public class RecordAAC {
+public class RecordAACV3 {
     private String TAG = "RecordAAC";
-    private AudioActivity2 mAudioAC;
+    private VideoActivity3 mAudioAC;
 
     //audio
     private FileOutputStream audioFos;
@@ -46,7 +47,7 @@ public class RecordAAC {
     //audio encode
     private MediaCodec mAudioCodec;
 
-    public RecordAAC(AudioActivity2 ac){
+    public RecordAACV3(VideoActivity3 ac){
         mAudioAC = ac;
     }
 
@@ -78,7 +79,9 @@ public class RecordAAC {
         mAudioCodec.start();
         Log.d(TAG,"audio codec");
     }
+
     public void startRecord(){
+        setRecordAacStatus(true);
         initAudioRec();
         mAudioRec.startRecording();
         new RecordAacThread().start();
@@ -142,13 +145,16 @@ public class RecordAAC {
                     encodedData[4] = (byte)((encodedData.length&0x7FF) >> 3);
                     encodedData[5] = (byte)(((encodedData.length&7)<<5) + 0x1F);
                     encodedData[6] = (byte)0xFC;
-                    Log.d("vvvvvvvvvvvvvvv","out put one");
+                    Log.d(TAG,"out put one");
                     //write data
                     try{
                         audioFos.write(encodedData,0,encodedData.length);
-                        //put data to ethe queue
-                        mAudioAC.offerAudioQueue(encodedData);
 
+                        //add timestamp
+                        //put data to ethe queue
+
+                        mAudioAC.offerAudioSendQueue(encodedData);
+                        Log.d(TAG,""+mAudioAC.getAACSendQueue().size());
                     }catch (IOException e){}
                     //continue circle
                     mAudioCodec.releaseOutputBuffer(outputBuffIndex,false);
