@@ -12,24 +12,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="record"
-        android:onClick="recordAac"/>
+        android:onClick="recordAac"
+        android:textAllCaps="false"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="send"
-        android:onClick="sendAudio"/>
+        android:onClick="sendAudio"
+        android:textAllCaps="false"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="rec"
-        android:onClick="recvAacClick"/>
+        android:text="Recv"
+        android:onClick="recvAacClick"
+        android:textAllCaps="false"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="play"
-        android:onClick="playAac"/>
+        android:onClick="playAac"
+        android:textAllCaps="false"/>
 
 </LinearLayout>

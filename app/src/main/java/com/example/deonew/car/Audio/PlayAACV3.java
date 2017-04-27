@@ -32,12 +32,13 @@ public class PlayAACV3 {
         this.path = filename;
         readFile();
     }
-    private VideoActivity3 mAudioAC = null;
+    private VideoActivity3 mainAC = null;
     public PlayAACV3(VideoActivity3 ac) {
-        mAudioAC = ac;
+        mainAC = ac;
     }
 
     public void start() {
+        Log.d(TAG,"start play");
         if (mWorker == null) {
             mWorker = new Worker();
             mWorker.setRunning(true);
@@ -132,7 +133,7 @@ public class PlayAACV3 {
                 while (!sawOutputEOS) {
                     if (!sawInputEOS) {
 
-                        Log.d(TAG,"start put data");
+//                        Log.d(TAG,"start put data");
                         int inputBufIndex = mDecoder.dequeueInputBuffer(kTimeOutUs);
                         if (inputBufIndex >= 0) {
                             Log.d(TAG,"input available");
@@ -141,6 +142,11 @@ public class PlayAACV3 {
 
                             //put a frame of audio file!!!!!!!!!!!!!!!
                             byte[] b = getOneAACFrame();
+//                            if (b == null){
+//                                ByteBuffer bf = ByteBuffer.allocate(4);
+//                                bf.putInt(0xfff95080);
+//                                byte[] naluHead = bf.array();
+//                            }
                             dstBuf.put(b);
                             int sampleSize = b.length;
 
@@ -154,9 +160,10 @@ public class PlayAACV3 {
                         }
                     }
                     int outputBufferIndex = mDecoder.dequeueOutputBuffer(info, kTimeOutUs);
+//                    int outputBufferIndex = mDecoder.dequeueOutputBuffer(info, 60000);
+                    Log.d(TAG,outputBufferIndex+"");
                     if (outputBufferIndex >= 0) {
                         Log.d(TAG,"output available");
-                        // Simply ignore codec config buffers.
                         if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
 //                            Log.i("TAG", "audio encoder: codec config buffer");
                             mDecoder.releaseOutputBuffer(outputBufferIndex, false);
@@ -170,6 +177,7 @@ public class PlayAACV3 {
                             byte[] data = new byte[info.size];
                             outBuf.get(data);
                             mPlayer.write(data, 0, info.size);
+                            Log.d(TAG,"player write data");
                         }
                         mDecoder.releaseOutputBuffer(outputBufferIndex, false);
                         if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
@@ -203,6 +211,8 @@ public class PlayAACV3 {
             }
         }
     }
+
+
     private FileInputStream fis = null;
     private byte[] currentBuff = new byte[10240];
     private int currentBuffStart = 0;//valid data start
@@ -231,14 +241,24 @@ public class PlayAACV3 {
         System.arraycopy(currentBuff, n, currentBuff, 0, currentBuff.length - n);
         currentBuffStart = 0;
         currentBuffEnd = currentBuffEnd - naluu.length;
+
+        //check head
+//        ByteBuffer b = ByteBuffer.allocate(4);
+//        b.putInt(0xfff95080);
+//        byte[] naluHead = b.array();
+//        if (naluu[0]!=naluHead[0] || naluu[1]!=naluHead[1] || naluu[1]!=naluHead[1] || naluu[1]!=naluHead[1]){
+//            naluu = naluHead;
+//        }
+
+        
         return naluu;
     }
     private int nextAACHead = -1;
     public int getNextIndex(){
         nextAACHead = getNextIndexOnce();
         while(nextAACHead == -1) {
-            if (!mAudioAC.getAACRecvQueue().isEmpty()) {
-                byte[] tmp = mAudioAC.getAACRecvQueue().poll();
+            if (!mainAC.getAACRecvQueue().isEmpty()) {
+                byte[] tmp = mainAC.getAACRecvQueue().poll();
                 System.arraycopy(tmp,0,currentBuff,currentBuffEnd,tmp.length);
                 currentBuffEnd = currentBuffEnd + tmp.length;
                 nextAACHead = getNextIndexOnce();

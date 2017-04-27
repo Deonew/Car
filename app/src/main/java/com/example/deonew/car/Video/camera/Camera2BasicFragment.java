@@ -1055,161 +1055,6 @@ public class Camera2BasicFragment extends Fragment
             }
         }
     }
-    private class ImageEncoder implements Runnable{
-        private final Image mImage;
-        public ImageEncoder(Image image){
-            mImage = image;
-        }
-        @Override
-        public void run() {
-            //encode here
-            if (H264fos == null) {
-                try {
-                    Log.d(TAG, "init file");
-                    H264fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/carTemp.h264", true);
-                } catch (FileNotFoundException e) {
-                }
-            }
-
-//            Image image = reader.acquireNextImage();
-
-            Image image = mImage;
-
-            if (isRecord) {
-                Rect crop = image.getCropRect();
-                int format = image.getFormat();//format: 35 = 0x23
-                int width = crop.width();
-                int height = crop.height();
-
-                Log.d(TAG, width + "  " + height);
-                Log.d(TAG, "origin" + mPreviewSize.getWidth() + "  " + mPreviewSize.getHeight());
-
-                Image.Plane[] planes = image.getPlanes();
-
-                byte[] data = new byte[width * height * ImageFormat.getBitsPerPixel(format) / 8];
-                byte[] rowData = new byte[planes[0].getRowStride()];
-                int channelOffset = 0;
-                int outputStride = 1;
-                for (int i = 0; i < planes.length; i++) {
-                    switch (i) {
-                        case 0:
-                            channelOffset = 0;
-                            outputStride = 1;
-                            break;
-                        case 1:
-                            channelOffset = width * height;
-                            outputStride = 1;
-                            break;
-                        case 2:
-                            channelOffset = (int) (width * height * 1.25);
-                            outputStride = 1;
-                            break;
-                    }
-                    ByteBuffer planebuffer = planes[i].getBuffer();
-                    int rowStride = planes[i].getRowStride();
-                    int pixelStride = planes[i].getPixelStride();
-                    int shift = (i == 0) ? 0 : 1;
-                    int w = width >> shift;
-                    int h = height >> shift;
-                    planebuffer.position(rowStride * (crop.top >> shift) + pixelStride * (crop.left >> shift));
-                    for (int row = 0; row < h; row++) {
-                        int length;
-                        if (pixelStride == 1 && outputStride == 1) {
-                            length = w;
-                            planebuffer.get(data, channelOffset, length);
-                            channelOffset += length;
-                        } else {
-                            length = (w - 1) * pixelStride + 1;
-                            planebuffer.get(rowData, 0, length);
-                            for (int col = 0; col < w; col++) {
-                                data[channelOffset] = rowData[col * pixelStride];
-                                channelOffset += outputStride;
-                            }
-                        }
-                        if (row < h - 1) {
-                            planebuffer.position(planebuffer.position() + rowStride - length);
-                        }
-                    }
-                }
-
-//                Log.d(TAG,data.length+"");
-
-                if (null == h264Encodec){
-                    Log.d(TAG,"no encoder");
-                }
-                //add codec input buffer
-                int iid = h264Encodec.dequeueInputBuffer(-1);
-                if (iid >= 0) {
-
-                    //get the input buffer
-                    ByteBuffer iBuffer = h264Encodec.getInputBuffer(iid);
-                    iBuffer.clear();
-                    //our image data put into buffer
-                    iBuffer.put(data);
-
-                    //put buffer back to the original place
-                    h264Encodec.queueInputBuffer(iid, 0, data.length, 100, 1);
-                }
-
-                MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-                int outputBufferId = h264Encodec.dequeueOutputBuffer(bufferInfo, 0);
-                if (outputBufferId < 0) {
-                    Log.d(TAG, outputBufferId + "no output");
-                }
-
-                while (outputBufferId >= 0) {
-                    //output buffer
-                    ByteBuffer outputBuffer = h264Encodec.getOutputBuffer(outputBufferId);
-                    outputBuffer.slice();
-
-                    byte[] outData = new byte[bufferInfo.size];
-                    outputBuffer.get(outData);
-
-                    //deal key frame v3.0
-                    if (bufferInfo.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
-                        //startSendH264 frame
-                        HeadInfo = new byte[outData.length];
-                        HeadInfo = outData;
-                        Log.d(TAG, "head");
-                    } else if (bufferInfo.flags % 8 == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
-                        //key frame
-                        byte[] key = new byte[outData.length + HeadInfo.length];
-                        //param: src srcpos dec decpos length
-                        System.arraycopy(HeadInfo, 0, key, 0, HeadInfo.length);
-                        System.arraycopy(outData, 0, key, HeadInfo.length, outData.length);
-                        //version 1.0
-                        //write key frame to h264
-                        try {
-                            H264fos.write(key, 0, key.length);
-                        } catch (IOException e) {
-                        }
-                        Log.d(TAG, "key");
-                        //put key frame to queue
-                        //                        offerVideoQueue(key);
-                    } else if (bufferInfo.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
-                        //end frame
-                        Log.d(TAG, "end");
-                    } else {
-
-                        try {
-                            H264fos.write(outData, 0, outData.length);
-                        } catch (IOException e) {
-                        }
-                        Log.d(TAG, "normal");
-                        //
-                        //                        offerVideoQueue(outData);
-                    }
-                    //release output buffer
-                    h264Encodec.releaseOutputBuffer(outputBufferId, false);
-                    Log.d(TAG, "release output");
-                    //change outputBufferId
-                    //to continue this while circle
-                    outputBufferId = h264Encodec.dequeueOutputBuffer(bufferInfo, 0);
-                }
-                mImage.close();
-            }
-        }
-    }
 
     /**
      * Compares two {@code Size}s based on their areas.
@@ -1226,7 +1071,7 @@ public class Camera2BasicFragment extends Fragment
     }
 
     private boolean isRecord = false;
-    public void startRecord(){
+    public void startRecordH264(){
         isRecord = true;
     }
 
@@ -1245,7 +1090,11 @@ public class Camera2BasicFragment extends Fragment
 //                configH264EnCodec(image.getWidth(),image.getHeight());
                 configH264EnCodec(ImageWidth,ImageHeight);
                 isEncodeConfigured = true;
+                Log.d(TAG,""+ImageHeight+"  "+ImageWidth);
             }
+
+//            Log.d(TAG,""+ImageHeight+"  "+ImageWidth);
+
             if (H264fos == null){
                 try{
                     Log.d(TAG,"init file");
@@ -1395,7 +1244,18 @@ public class Camera2BasicFragment extends Fragment
                             H264fos.write(key, 0, key.length);
                         } catch (IOException e) {
                         }
-                        mVideoAC3.offerSendH264Queue(key);
+
+                        //add timestamp
+                        byte[] toSend = new byte[key.length+8];
+                        long t = System.currentTimeMillis();
+                        ByteBuffer bf = ByteBuffer.allocate(8);
+                        bf.putLong(0,t);
+                        byte [] b = bf.array();
+                        System.arraycopy(b,0,toSend,0,8);
+                        System.arraycopy(key,0,toSend,8,key.length);
+
+                        mVideoAC3.offerSendH264Queue(toSend);
+
                         Log.d(TAG, "key");
                         //put key frame to queue
                         //                        offerVideoQueue(key);
@@ -1410,7 +1270,18 @@ public class Camera2BasicFragment extends Fragment
                         }
                         Log.d(TAG, "normal");
 //                        offerVideoQueue(outData);
-                        mVideoAC3.offerSendH264Queue(outData);
+//                        mVideoAC3.offerSendH264Queue(outData);
+                        //add timestamp
+                        byte[] toSend = new byte[outData.length+8];
+                        long t = System.currentTimeMillis();
+                        ByteBuffer bf = ByteBuffer.allocate(8);
+                        bf.putLong(0,t);
+                        byte [] b = bf.array();
+                        System.arraycopy(b,0,toSend,0,8);
+                        System.arraycopy(outData,0,toSend,8,outData.length);
+
+                        mVideoAC3.offerSendH264Queue(toSend);
+
                     }
                     //release output buffer
                     h264Encodec.releaseOutputBuffer(outputBufferId, false);

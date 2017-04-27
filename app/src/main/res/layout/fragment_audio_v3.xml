@@ -14,21 +14,25 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="record"
-        android:id="@+id/recordAACV3"/>
+        android:id="@+id/recordAACV3"
+        android:textAllCaps="false"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="send"
-        android:id="@+id/sendAACV3"/>
+        android:id="@+id/sendAACV3"
+        android:textAllCaps="false"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="recv"
-        android:id="@+id/recvAACV3"/>
+        android:id="@+id/recvAACV3"
+        android:textAllCaps="false"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="play"
-        android:id="@+id/playAACV3"/>
+        android:id="@+id/playAACV3"
+        android:textAllCaps="false"/>
 
 </LinearLayout>

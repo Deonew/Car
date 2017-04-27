@@ -6,6 +6,8 @@ package com.example.deonew.car;
 
 public class Test {
     public  static  void main(String args[]){
+
+
         long t1 = System.currentTimeMillis();
         try {
             Thread.sleep(10);
@@ -13,6 +15,7 @@ public class Test {
         long t2 = System.currentTimeMillis();
 
         System.out.println(""+(t2-t1));
+        System.out.println(""+t2);
 //        while (true){
 //            System.out.println("Test"+System.currentTimeMillis());
 //        }

@@ -9,6 +9,7 @@ import android.media.MediaRecorder;
 import android.os.Environment;
 import android.util.Log;
 
+import com.example.deonew.car.Tool.TimeStamp;
 import com.example.deonew.car.Video.VideoActivity3;
 
 import java.io.File;
@@ -22,8 +23,8 @@ import java.nio.ByteBuffer;
  */
 
 public class RecordAACV3 {
-    private String TAG = "RecordAAC";
-    private VideoActivity3 mAudioAC;
+    private String TAG = "RecordAACV3";
+    private VideoActivity3 mainAC;
 
     //audio
     private FileOutputStream audioFos;
@@ -46,9 +47,11 @@ public class RecordAACV3 {
 
     //audio encode
     private MediaCodec mAudioCodec;
+    private TimeStamp mAACTimeStamp;
 
     public RecordAACV3(VideoActivity3 ac){
-        mAudioAC = ac;
+        mainAC = ac;
+        mAACTimeStamp = new TimeStamp();
     }
 
     public void initAudioRec(){
@@ -151,16 +154,28 @@ public class RecordAACV3 {
                         audioFos.write(encodedData,0,encodedData.length);
 
                         //add timestamp
-                        //put data to ethe queue
+                        byte[] aacts = mAACTimeStamp.getTimeStamp();
+                        byte[] toOffer = new byte[encodedData.length+8];
+                        System.arraycopy(aacts,0,toOffer,0,8);
+                        System.arraycopy(encodedData,0,toOffer,8,encodedData.length);
 
-                        mAudioAC.offerAudioSendQueue(encodedData);
-                        Log.d(TAG,""+mAudioAC.getAACSendQueue().size());
+                        //put data to the queue
+//                        mainAC.offerAudioSendQueue(toOffer);
+                        mainAC.offerAudioSendQueue(encodedData);
+
+                        Log.d(TAG,""+ mainAC.getAACSendQueue().size());
+
                     }catch (IOException e){}
                     //continue circle
                     mAudioCodec.releaseOutputBuffer(outputBuffIndex,false);
                     outputBuffIndex = mAudioCodec.dequeueOutputBuffer(buInfo,0);
                 }
             }
+
+            try{
+                Thread.sleep(10);
+            }catch (InterruptedException e){}
+
         }
 
     }

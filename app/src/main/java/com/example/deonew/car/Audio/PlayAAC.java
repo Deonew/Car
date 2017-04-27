@@ -93,9 +93,7 @@ public class PlayAAC {
 
                 mDecoder = MediaCodec.createDecoderByType("audio/mp4a-latm");
 
-
                 MediaFormat mediaFormat = null;
-
 
                 mediaFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", 44100,2);
                 mediaFormat.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
@@ -113,7 +111,7 @@ public class PlayAAC {
                 return false;
             }
             if (mDecoder == null) {
-                Log.d("aaaaaaaaaaaaaaaaaa","decoder failed");
+                Log.d(TAG,"decoder failed");
                 return false;
             }
             mDecoder.start();
@@ -130,7 +128,7 @@ public class PlayAAC {
                 while (!sawOutputEOS) {
                     if (!sawInputEOS) {
 
-                        Log.d("aaaaaaaaaaaaaaa","start put data");
+                        Log.d(TAG,"start put data");
                         int inputBufIndex = mDecoder.dequeueInputBuffer(kTimeOutUs);
                         if (inputBufIndex >= 0) {
                             Log.d(TAG,"input available");
@@ -141,6 +139,8 @@ public class PlayAAC {
                             byte[] b = getOneAACFrame();
                             dstBuf.put(b);
                             int sampleSize = b.length;
+
+                            Log.d(TAG,"one frame");
 
                             // -1 means no more availalbe
                             if (sampleSize < 0) {
@@ -168,11 +168,12 @@ public class PlayAAC {
                             byte[] data = new byte[info.size];
                             outBuf.get(data);
                             mPlayer.write(data, 0, info.size);
+                            Log.d(TAG,"write one");
                         }
                         mDecoder.releaseOutputBuffer(outputBufferIndex, false);
                         if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                             sawOutputEOS = true;
-                            Log.d("aaaaaaaaaaaaaa","end");
+                            Log.d(TAG,"end");
                         }
                     }
                     else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {

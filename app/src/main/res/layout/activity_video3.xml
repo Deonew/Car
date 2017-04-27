@@ -2,8 +2,7 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
-    android:layout_width="match_parent" >
-
+    android:layout_width="match_parent">
 
     <LinearLayout
         android:id="@+id/cameraPreview"
@@ -12,7 +11,6 @@
         android:layout_height="500px"
         android:background="@color/colorPrimaryDark">
     </LinearLayout>
-
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -50,30 +48,35 @@
         android:layout_height="wrap_content"
         android:id="@+id/videoControlFragment"
         android:layout_below="@id/showView">
+
+        <Button
+            android:id="@+id/record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="recordH264"
+            android:textAllCaps="false"/>
+
+        <Button
+            android:id="@+id/sendBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="send"
+            android:textAllCaps="false"/>
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/recvH264V3"
-            android:text="recv" />
+            android:text="recv"
+            android:textAllCaps="false"/>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="play"
             android:layout_alignLeft="@+id/recvH264V3"
-            android:id="@+id/playH264V3"/>
-
-        <Button
-            android:id="@+id/record"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="recordH264" />
-
-        <Button
-            android:id="@+id/sendBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="send" />
+            android:id="@+id/playH264V3"
+            android:textAllCaps="false"/>
     </LinearLayout>
 
     <LinearLayout

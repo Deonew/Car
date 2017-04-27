@@ -42,9 +42,9 @@ public class AudioFragmentV3 extends Fragment {
 //        sendAAC = new SendAAC(mainAC);
         recordAACV3 = new RecordAACV3(mainAC);
 
-        sendAACV3 = new SendAACV3(mainAC);
+//        sendAACV3 = new SendAACV3(mainAC);
 
-        recvAACV3 = new RecvAACV3(mainAC);
+//        recvAACV3 = new RecvAACV3(mainAC);
 
         playAACV3 = new PlayAACV3(mainAC);
     }
@@ -53,6 +53,11 @@ public class AudioFragmentV3 extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        initBtn();
+
+    }
+
+    public void initBtn(){
         Button button = (Button)getActivity().findViewById(R.id.recordAACV3);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,8 +102,9 @@ public class AudioFragmentV3 extends Fragment {
     }
 
     public void startRecvAACV3(){
-        recvAACV3.startRecvAAC();
+        mainAC.startRecvAAC();
     }
+
     public void startPlayAACV3(){
         playAACV3.start();
     }

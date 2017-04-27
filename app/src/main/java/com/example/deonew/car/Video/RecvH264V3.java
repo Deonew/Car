@@ -48,10 +48,20 @@ public class RecvH264V3 {
                         int n;
                         while((n = ins.read(readByte))!=-1){
                             Log.d(TAG,"receive");
+                            Log.d(TAG,""+mVideoAC.getH264RecvQueue().size());
+
                             byte[] toOffer = new byte[n];
                             System.arraycopy(readByte,0,toOffer,0,n);
+
+                            //get timestamp
+                            byte[] t = new byte[8];
+                            System.arraycopy(readByte,0,t,0,8);
+
+                            //get real data
+                            System.arraycopy(readByte,8,toOffer,0,n-8);
+
+
                             mVideoAC.getH264RecvQueue().offer(toOffer);
-                            Log.d(TAG,""+mVideoAC.getH264RecvQueue().size());
                         }
                     }
                 }
