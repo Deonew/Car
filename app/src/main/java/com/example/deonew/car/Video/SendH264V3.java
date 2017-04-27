@@ -35,35 +35,9 @@ public class SendH264V3 {
     public void startSendH264(){
         sendThread.start();
     }
-    public void connectToBox(){
-        sendThread.connectToBox();
-    }
-    public void connectToPhone(){
-        sendThread.connectToPhone();
-    }
 
     //get data frome queue
     private class SendThread extends Thread{
-        public void connectToBox(){
-            try{
-                send = new Socket("10.1.1.1",8888);
-                Log.d("qqqqqqqqqqq","success");
-//                send = new Socket("10.1.1.1",8888);//obu
-                sendStream = send.getOutputStream();
-            }catch (IOException e){
-                Log.d("qqqqqqqqqqqqqqqqqqqqqqq","worong");
-            }
-        }
-        public void connectToPhone(){
-            try{
-                send = new Socket("10.105.38.183",8888);
-                Log.d("qqqqqqqqqqq","success");
-//                send = new Socket("10.1.1.1",8888);//obu
-                sendStream = send.getOutputStream();
-            }catch (IOException e){
-                Log.d("qqqqqqqqqqqqqqqqqqqqqqq","worong");
-            }
-        }
 
         @Override
         public void run() {

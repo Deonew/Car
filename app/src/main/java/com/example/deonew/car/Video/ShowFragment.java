@@ -113,8 +113,10 @@ public class ShowFragment extends Fragment {
     }
     private boolean isPlay = false;
     public void startPlay(){
-        isPlay = true;
-        new decodeH2Thread().start();
+        if (!isPlay){
+            new decodeH2Thread().start();
+            isPlay = true;
+        }
     }
     class decodeH2Thread extends Thread{
         @Override
@@ -141,10 +143,8 @@ public class ShowFragment extends Fragment {
                         }
                     }
 
-
                     int outIndex = mPlayCodec.dequeueOutputBuffer(info, timeoutUs);
                     Log.d(TAG,"get output");
-
 //                    if (outIndex<0){
 //                        Log.d(TAG,outIndex+"");//-1
 //                        continue;

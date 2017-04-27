@@ -260,7 +260,7 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onImageAvailable(ImageReader reader) {
-            Log.d(TAG,"image available");
+//            Log.d(TAG,"image available");
 
             //origin
 //            mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
@@ -470,22 +470,22 @@ public class Camera2BasicFragment extends Fragment
         super.onActivityCreated(savedInstanceState);
         mFile = new File(getActivity().getExternalFilesDir(null), "pic.jpg");
 
-
-        Button button = (Button)getActivity().findViewById(R.id.record);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG,"clicked");
-                isRecord = true;
-            }
-        });
-        Button sendBtn = (Button)getActivity().findViewById(R.id.sendBtn);
-        sendBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mVideoAC3.startSendH264();
-            }
-        });
+//
+//        Button button = (Button)getActivity().findViewById(R.id.record);
+//        button.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Log.d(TAG,"clicked");
+//                isRecord = true;
+//            }
+//        });
+//        Button sendBtn = (Button)getActivity().findViewById(R.id.sendBtn);
+//        sendBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mainAC.startSendH264();
+//            }
+//        });
     }
 
     @Override
@@ -1074,15 +1074,18 @@ public class Camera2BasicFragment extends Fragment
     public void startRecordH264(){
         isRecord = true;
     }
+    public void stopRecordH264(){
+        isRecord = false;
+        Log.d(TAG,"ssssssssssssssssssss");
+    }
 
-    private VideoActivity3 mVideoAC3 ;
+    private VideoActivity3 mainAC;
     class H264Encode{
         private MediaCodec mH264Encodec = null;
         public H264Encode(){
             //
         }
         public void code(Image image){
-            Log.d(TAG,"data come");
 
             if (!isEncodeConfigured){
                 ImageWidth = image.getWidth();
@@ -1102,8 +1105,8 @@ public class Camera2BasicFragment extends Fragment
                 }catch (FileNotFoundException e){
                 }
             }
-            if (mVideoAC3 == null){
-                mVideoAC3 = (VideoActivity3)getActivity();
+            if (mainAC == null){
+                mainAC = (VideoActivity3)getActivity();
             }
 
 //            Log.d(TAG,"size:"+image.getWidth()+"   "+image.getHeight());
@@ -1169,10 +1172,6 @@ public class Camera2BasicFragment extends Fragment
                     }
                 }
 
-                Log.d(TAG,"data come");
-                if (!isRecord){
-                    return;
-                }
                 if (null == mH264Encodec){
                     try{
                         mH264Encodec = MediaCodec.createEncoderByType("video/avc");
@@ -1254,7 +1253,8 @@ public class Camera2BasicFragment extends Fragment
                         System.arraycopy(b,0,toSend,0,8);
                         System.arraycopy(key,0,toSend,8,key.length);
 
-                        mVideoAC3.offerSendH264Queue(toSend);
+//                        mainAC.offerSendH264Queue(toSend);
+                        mainAC.offerSendH264Queue(key);
 
                         Log.d(TAG, "key");
                         //put key frame to queue
@@ -1270,7 +1270,7 @@ public class Camera2BasicFragment extends Fragment
                         }
                         Log.d(TAG, "normal");
 //                        offerVideoQueue(outData);
-//                        mVideoAC3.offerSendH264Queue(outData);
+//                        mainAC.offerSendH264Queue(outData);
                         //add timestamp
                         byte[] toSend = new byte[outData.length+8];
                         long t = System.currentTimeMillis();
@@ -1280,7 +1280,8 @@ public class Camera2BasicFragment extends Fragment
                         System.arraycopy(b,0,toSend,0,8);
                         System.arraycopy(outData,0,toSend,8,outData.length);
 
-                        mVideoAC3.offerSendH264Queue(toSend);
+//                        mainAC.offerSendH264Queue(toSend);
+                        mainAC.offerSendH264Queue(outData);
 
                     }
                     //release output buffer

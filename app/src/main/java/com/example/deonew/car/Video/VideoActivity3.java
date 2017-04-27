@@ -25,6 +25,7 @@ public class VideoActivity3 extends FragmentActivity {
     private AudioFragmentV3 audioFragmentV3;
     private Camera2BasicFragment camera2BasicFragment;
     private AudioSocketWrapper audioSocketWrapper;
+    private VideoSocketWrapper videoSocketWrapper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,10 +55,12 @@ public class VideoActivity3 extends FragmentActivity {
 //        sendH264 = new SendH264(this);
         sendH264V3 = new SendH264V3(this);
 //
-//        recvH264V3= new RecvH264V3(this);
+        recvH264V3= new RecvH264V3(this);
 
 
         audioSocketWrapper = new AudioSocketWrapper(this,getAACSendQueue(),getAACRecvQueue());
+        videoSocketWrapper = new VideoSocketWrapper(this,getAACSendQueue(),getAACRecvQueue());
+
 
         initBtn();
 
@@ -68,24 +71,6 @@ public class VideoActivity3 extends FragmentActivity {
 
 
     public void initBtn(){
-
-        Button button = (Button)findViewById(R.id.recvH264V3);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG,"recv clicked");
-                startRecvH264();
-            }
-        });
-        Button playBtn = (Button)findViewById(R.id.playH264V3);
-        playBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG,"playBtn clicked");
-                startH264Play();
-            }
-        });
-
 
         Button recordBtn = (Button)findViewById(R.id.record);
         recordBtn.setOnClickListener(new View.OnClickListener() {
@@ -105,6 +90,28 @@ public class VideoActivity3 extends FragmentActivity {
             }
         });
 
+        Button button = (Button)findViewById(R.id.recvH264V3);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG,"recv clicked");
+                startRecvH264();
+            }
+        });
+        Button playBtn = (Button)findViewById(R.id.playH264V3);
+        playBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG,"playBtn clicked");
+                startH264Play();
+            }
+        });
+
+
+
+
+
+        //-------set
         Button setSendBtn = (Button)findViewById(R.id.setSendBtn);
         setSendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,33 +148,46 @@ public class VideoActivity3 extends FragmentActivity {
     public BlockingQueue getH264SendQueue(){
         return H264SendQueue;
     }
+    int totalSendcnt = 0;
     public void offerSendH264Queue(byte[] b){
         int n = b.length/1000;
-        for(int i = 0;i< n+1;i++){
+        int m = b.length%1000;
+        if (m !=0){
+            n++;
+        }
+        for(int i = 0;i< n;i++){
             int len = 1000;
-            if (i == n){
+            if (i == n-1){
                 len = b.length - i*1000;
             }
             if (len == 0)
                 break;
             byte[] tmp = new byte[len];
             System.arraycopy(b,i*1000,tmp,0,len);
-            getH264SendQueue().offer(tmp);
-            i++;
-
+            H264SendQueue.offer(tmp);
+            totalSendcnt++;
         }
+//        Log.d(TAG,"offer one h264 and send size:"+getH264SendQueue().size()+"         "+ totalSendcnt);
     }
+
 
     //send h264
     private SendH264V3 sendH264V3;
     private boolean isSendH264 = false;
 
     public void startSendH264(){
-        Log.d(TAG,"ac3 send start");
-        isSendH264 = true;
-        sendH264V3.startSendH264();
-    }
+//        Log.d(TAG,"ac3 send start");
+//        isSendH264 = true;
+//        sendH264V3.startSendH264();
 
+        Log.d(TAG,"h264 send start");
+        if (!isSendH264){
+            videoSocketWrapper.startSendH264();
+            isSendH264 = true;
+        }else{
+
+        }
+    }
     private RecvH264V3 recvH264V3 = null;
     private boolean isRecvH264 = false;
     public void startRecvH264(){
@@ -175,6 +195,11 @@ public class VideoActivity3 extends FragmentActivity {
         if (isRecvH264){
             recvH264V3.startRecvH264();
         }
+
+//        if (!isRecvH264){
+//            videoSocketWrapper.startRecvH264();
+//            isRecvH264 = true;
+//        }
     }
 
     //
@@ -262,8 +287,18 @@ public class VideoActivity3 extends FragmentActivity {
     }
 
     //record
-    public void startRecordH264(){
-        camera2BasicFragment.startRecordH264();
+    private boolean isRecordH264 = false;
+    public void startRecordH264() {
+//        Log.d(TAG,"stop record");
+        isRecordH264 = !isRecordH264;
+        if (isRecordH264) {
+            camera2BasicFragment.startRecordH264();
+//            isRecordH264 = true;
+        }else{
+            Log.d(TAG,"stop record");
+            camera2BasicFragment.stopRecordH264();
+//            isRecordH264 = false;
+        }
     }
 
 
