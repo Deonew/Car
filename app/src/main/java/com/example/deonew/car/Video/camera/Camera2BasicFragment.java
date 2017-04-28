@@ -1076,7 +1076,6 @@ public class Camera2BasicFragment extends Fragment
     }
     public void stopRecordH264(){
         isRecord = false;
-        Log.d(TAG,"ssssssssssssssssssss");
     }
 
     private VideoActivity3 mainAC;
@@ -1171,6 +1170,7 @@ public class Camera2BasicFragment extends Fragment
                         }
                     }
                 }
+//                byte[] data =  getDataFromImage(image,2);
 
                 if (null == mH264Encodec){
                     try{
@@ -1244,16 +1244,17 @@ public class Camera2BasicFragment extends Fragment
                         } catch (IOException e) {
                         }
 
-                        //add timestamp
-                        byte[] toSend = new byte[key.length+8];
-                        long t = System.currentTimeMillis();
-                        ByteBuffer bf = ByteBuffer.allocate(8);
-                        bf.putLong(0,t);
-                        byte [] b = bf.array();
-                        System.arraycopy(b,0,toSend,0,8);
-                        System.arraycopy(key,0,toSend,8,key.length);
 
+                        //add timestamp
+//                        byte[] toSend = new byte[key.length+8];
+//                        long t = System.currentTimeMillis();
+//                        ByteBuffer bf = ByteBuffer.allocate(8);
+//                        bf.putLong(0,t);
+//                        byte [] b = bf.array();
+//                        System.arraycopy(b,0,toSend,0,8);
+//                        System.arraycopy(key,0,toSend,8,key.length);
 //                        mainAC.offerSendH264Queue(toSend);
+//
                         mainAC.offerSendH264Queue(key);
 
                         Log.d(TAG, "key");
@@ -1263,7 +1264,6 @@ public class Camera2BasicFragment extends Fragment
                         //end frame
                         Log.d(TAG, "end");
                     } else {
-
                         try {
                             H264fos.write(outData, 0, outData.length);
                         } catch (IOException e) {
@@ -1272,13 +1272,7 @@ public class Camera2BasicFragment extends Fragment
 //                        offerVideoQueue(outData);
 //                        mainAC.offerSendH264Queue(outData);
                         //add timestamp
-                        byte[] toSend = new byte[outData.length+8];
-                        long t = System.currentTimeMillis();
-                        ByteBuffer bf = ByteBuffer.allocate(8);
-                        bf.putLong(0,t);
-                        byte [] b = bf.array();
-                        System.arraycopy(b,0,toSend,0,8);
-                        System.arraycopy(outData,0,toSend,8,outData.length);
+
 
 //                        mainAC.offerSendH264Queue(toSend);
                         mainAC.offerSendH264Queue(outData);
@@ -1294,4 +1288,98 @@ public class Camera2BasicFragment extends Fragment
             image.close();
         }
     }
+
+    //编码器颜色
+    private static final int COLOR_FormatI420 = 1;
+    //   摄像头拍摄颜色
+    private static final int COLOR_FormatNV21 = 2;
+    private static byte[] getDataFromImage(Image image, int colorFormat) {
+        if (colorFormat != COLOR_FormatI420 && colorFormat != COLOR_FormatNV21) {
+            throw new IllegalArgumentException("only support COLOR_FormatI420 " + "and COLOR_FormatNV21");
+        }
+        if (!isImageFormatSupported(image)) {
+            throw new RuntimeException("can't convert Image to byte array, format " + image.getFormat());
+        }
+        Rect crop = image.getCropRect();
+        int format = image.getFormat();
+        int width = crop.width();
+        int height = crop.height();
+        Image.Plane[] planes = image.getPlanes();
+        byte[] data = new byte[width * height * ImageFormat.getBitsPerPixel(format) / 8];
+        byte[] rowData = new byte[planes[0].getRowStride()];
+        if (true) Log.v(TAG, "get data from " + planes.length + " planes");
+        int channelOffset = 0;
+        int outputStride = 1;
+        for (int i = 0; i < planes.length; i++) {
+            switch (i) {
+                case 0:
+                    channelOffset = 0;
+                    outputStride = 1;
+                    break;
+                case 1:
+                    if (colorFormat == COLOR_FormatI420) {
+                        channelOffset = width * height;
+                        outputStride = 1;
+                    } else if (colorFormat == COLOR_FormatNV21) {
+                        channelOffset = width * height + 1;
+                        outputStride = 2;
+                    }
+                    break;
+                case 2:
+                    if (colorFormat == COLOR_FormatI420) {
+                        channelOffset = (int) (width * height * 1.25);
+                        outputStride = 1;
+                    } else if (colorFormat == COLOR_FormatNV21) {
+                        channelOffset = width * height;
+                        outputStride = 2;
+                    }
+                    break;
+            }
+            ByteBuffer buffer = planes[i].getBuffer();
+            int rowStride = planes[i].getRowStride();
+            int pixelStride = planes[i].getPixelStride();
+            if (true) {
+                Log.v(TAG, "pixelStride " + pixelStride);
+                Log.v(TAG, "rowStride " + rowStride);
+                Log.v(TAG, "width " + width);
+                Log.v(TAG, "height " + height);
+                Log.v(TAG, "buffer size " + buffer.remaining());
+            }
+            int shift = (i == 0) ? 0 : 1;
+            int w = width >> shift;
+            int h = height >> shift;
+            buffer.position(rowStride * (crop.top >> shift) + pixelStride * (crop.left >> shift));
+            for (int row = 0; row < h; row++) {
+                int length;
+                if (pixelStride == 1 && outputStride == 1) {
+                    length = w;
+                    buffer.get(data, channelOffset, length);
+                    channelOffset += length;
+                } else {
+                    length = (w - 1) * pixelStride + 1;
+                    buffer.get(rowData, 0, length);
+                    for (int col = 0; col < w; col++) {
+                        data[channelOffset] = rowData[col * pixelStride];
+                        channelOffset += outputStride;
+                    }
+                }
+                if (row < h - 1) {
+                    buffer.position(buffer.position() + rowStride - length);
+                }
+            }
+            if (true) Log.v(TAG, "Finished reading data from plane " + i);
+        }
+        return data;
+    }
+    private static boolean isImageFormatSupported(Image image) {
+        int format = image.getFormat();
+        switch (format) {
+            case ImageFormat.YUV_420_888:
+            case ImageFormat.NV21:
+            case ImageFormat.YV12:
+                return true;
+        }
+        return false;
+    }
+
 }

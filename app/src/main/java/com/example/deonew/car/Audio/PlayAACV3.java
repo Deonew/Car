@@ -23,7 +23,7 @@ import static android.media.MediaCodec.INFO_TRY_AGAIN_LATER;
 
 public class PlayAACV3 {
 
-    private static final String TAG = "PlayAAC";
+    private static final String TAG = "PlayAACV3";
     public static final int KEY_CHANNEL_COUNT = 0;
     private Worker mWorker;
     private String path;//aac文件的路径。
@@ -54,7 +54,6 @@ public class PlayAACV3 {
 
     }
 
-
     private class Worker extends Thread {
         private static final int KEY_SAMPLE_RATE = 0;
         private boolean isRunning = false;
@@ -73,7 +72,7 @@ public class PlayAACV3 {
                 isRunning = false;
             }
             while (isRunning) {
-                Log.d(TAG,"decode");
+                Log.d("aaaaaaaaa","decode");
                 decode();
             }
             release();
@@ -96,9 +95,7 @@ public class PlayAACV3 {
 
                 mDecoder = MediaCodec.createDecoderByType("audio/mp4a-latm");
 
-
                 MediaFormat mediaFormat = null;
-
 
                 mediaFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", 44100,2);
                 mediaFormat.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
@@ -133,22 +130,22 @@ public class PlayAACV3 {
                 while (!sawOutputEOS) {
                     if (!sawInputEOS) {
 
-//                        Log.d(TAG,"start put data");
+                        Log.d(TAG,"start put data");
                         int inputBufIndex = mDecoder.dequeueInputBuffer(kTimeOutUs);
                         if (inputBufIndex >= 0) {
                             Log.d(TAG,"input available");
                             ByteBuffer dstBuf = mDecoder.getInputBuffer(inputBufIndex);
 //                            int sampleSize = extractor.readSampleData(dstBuf, 0);//get data from extractor
 
-                            //put a frame of audio file!!!!!!!!!!!!!!!
-                            byte[] b = getOneAACFrame();
-//                            if (b == null){
-//                                ByteBuffer bf = ByteBuffer.allocate(4);
-//                                bf.putInt(0xfff95080);
-//                                byte[] naluHead = bf.array();
-//                            }
+                            byte[] b = null;
+                            for (int t = 0;t<2;t++){
+                                //put a frame of audio  file!!!!!!!!!!!!!!!
+                                b = getOneAACFrame();
+                            }
                             dstBuf.put(b);
                             int sampleSize = b.length;
+
+                            Log.d(TAG,"one frame");
 
                             // -1 means no more availalbe
                             if (sampleSize < 0) {
@@ -157,13 +154,14 @@ public class PlayAACV3 {
                             } else {
                                 mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, System.nanoTime()/1000, 0);
                             }
+
+
                         }
                     }
                     int outputBufferIndex = mDecoder.dequeueOutputBuffer(info, kTimeOutUs);
-//                    int outputBufferIndex = mDecoder.dequeueOutputBuffer(info, 60000);
-                    Log.d(TAG,outputBufferIndex+"");
                     if (outputBufferIndex >= 0) {
                         Log.d(TAG,"output available");
+                        // Simply ignore codec config buffers.
                         if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
 //                            Log.i("TAG", "audio encoder: codec config buffer");
                             mDecoder.releaseOutputBuffer(outputBufferIndex, false);
@@ -177,7 +175,7 @@ public class PlayAACV3 {
                             byte[] data = new byte[info.size];
                             outBuf.get(data);
                             mPlayer.write(data, 0, info.size);
-                            Log.d(TAG,"player write data");
+                            Log.d(TAG,"write one");
                         }
                         mDecoder.releaseOutputBuffer(outputBufferIndex, false);
                         if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
@@ -211,7 +209,6 @@ public class PlayAACV3 {
             }
         }
     }
-
 
     private FileInputStream fis = null;
     private byte[] currentBuff = new byte[10240];
@@ -273,7 +270,8 @@ public class PlayAACV3 {
     public int getNextIndexOnce(){
         int nextIndex = -1;
         ByteBuffer b = ByteBuffer.allocate(4);
-        b.putInt(0xfff95080);
+        b.putInt(0xfff15080);//some times
+//        b.putInt(0xfff95080);
         byte[] naluHead = b.array();
         int i = 0;
         int index = 0;

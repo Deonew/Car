@@ -102,6 +102,7 @@ public class ShowFragment extends Fragment {
                 //set output image format
                 mediaformat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
                 mPlayCodec.configure(mediaformat, holder.getSurface(), null, 0);
+                Log.d(TAG,"decoder config");
 //                mPlayCodec.configure(mediaformat, null, null, 0);
                 mPlayCodec.start();
             }

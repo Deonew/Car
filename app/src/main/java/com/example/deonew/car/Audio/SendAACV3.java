@@ -65,6 +65,11 @@ public class SendAACV3 {
                 }else {
                     Log.d(TAG,"socket err");
                 }
+
+                try{
+                    Thread.sleep(10);
+                }catch (InterruptedException e){}
+
             }
         }
     }

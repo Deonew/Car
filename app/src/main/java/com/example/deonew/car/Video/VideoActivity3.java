@@ -14,6 +14,7 @@ import com.example.deonew.car.R;
 import com.example.deonew.car.Video.camera.Camera2BasicFragment;
 
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -62,6 +63,8 @@ public class VideoActivity3 extends FragmentActivity {
         videoSocketWrapper = new VideoSocketWrapper(this,getAACSendQueue(),getAACRecvQueue());
 
 
+
+
         initBtn();
 
 
@@ -106,10 +109,6 @@ public class VideoActivity3 extends FragmentActivity {
                 startH264Play();
             }
         });
-
-
-
-
 
         //-------set
         Button setSendBtn = (Button)findViewById(R.id.setSendBtn);
@@ -165,6 +164,17 @@ public class VideoActivity3 extends FragmentActivity {
             byte[] tmp = new byte[len];
             System.arraycopy(b,i*1000,tmp,0,len);
             H264SendQueue.offer(tmp);
+            Log.d(TAG,tmp.length+"");
+
+//            byte[] toOfferWithTS = new byte[tmp.length+8];
+//            long t = System.currentTimeMillis();
+//            ByteBuffer bf = ByteBuffer.allocate(8);
+//            bf.putLong(0,t);
+//            byte [] timeArr = bf.array();
+//            System.arraycopy(timeArr,0,toOfferWithTS,0,8);
+//            System.arraycopy(tmp,0,toOfferWithTS,8,tmp.length);
+////            Log.d(TAG,toOfferWithTS.length+"");
+//            H264SendQueue.offer(toOfferWithTS);
             totalSendcnt++;
         }
 //        Log.d(TAG,"offer one h264 and send size:"+getH264SendQueue().size()+"         "+ totalSendcnt);
@@ -191,15 +201,10 @@ public class VideoActivity3 extends FragmentActivity {
     private RecvH264V3 recvH264V3 = null;
     private boolean isRecvH264 = false;
     public void startRecvH264(){
-        isRecvH264 = true;
-        if (isRecvH264){
-            recvH264V3.startRecvH264();
+        if (!isRecvH264){
+            videoSocketWrapper.startRecvH264();
+            isRecvH264 = true;
         }
-
-//        if (!isRecvH264){
-//            videoSocketWrapper.startRecvH264();
-//            isRecvH264 = true;
-//        }
     }
 
     //
@@ -309,8 +314,12 @@ public class VideoActivity3 extends FragmentActivity {
 
 
     //------------------------------------aac send
+    private boolean isSendAAC = false;
     public void startSendAAC(){
-        audioSocketWrapper.startSend();
+        if (!isSendAAC){
+            audioSocketWrapper.startSend();
+            isSendAAC = true;
+        }
     }
     public void startRecvAAC(){
         audioSocketWrapper.startRecv();
@@ -324,17 +333,21 @@ public class VideoActivity3 extends FragmentActivity {
 
     public void offerAudioSendQueue(byte[] b){
         int n = b.length/1000;
-        for(int i = 0;i< n+1;i++){
+        int m = b.length%1000;
+        if (m !=0){
+            n++;
+        }
+        for(int i = 0;i< n;i++){
             int len = 1000;
-            if (i == n){
+            if (i == n-1){
                 len = b.length - i*1000;
             }
             if (len == 0)
                 break;
             byte[] tmp = new byte[len];
             System.arraycopy(b,i*1000,tmp,0,len);
-            getAACSendQueue().offer(tmp);
-            i++;
+            AACSendQueue.offer(tmp);
+//            Log.d(TAG,tmp.length+"");
         }
     }
 

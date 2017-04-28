@@ -92,13 +92,18 @@ public class AudioFragmentV3 extends Fragment {
         });
     }
 
+    private boolean isRecordAAC = false;
     public void startRecordAACV3(){
-        recordAACV3.startRecord();
+
+        if (!isRecordAAC){
+            recordAACV3.startRecord();
+            isRecordAAC = true;
+        }
+
     }
 
     public void startSendAACV3(){
         mainAC.startSendAAC();
-//        sendAACV3.startSendAAC();
     }
 
     public void startRecvAACV3(){
@@ -106,6 +111,7 @@ public class AudioFragmentV3 extends Fragment {
     }
 
     public void startPlayAACV3(){
+
         playAACV3.start();
     }
 
