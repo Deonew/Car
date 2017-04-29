@@ -161,7 +161,7 @@ public class VideoSocketWrapper {
                 mainAC.getH264RecvQueue().clear();
                 while(true){
                     while(isRecv){
-                            try {
+                        try {
                             byte[] readByte = new byte[2000];
                             int n;
                             while((n = recvSream.read(readByte))!=-1){

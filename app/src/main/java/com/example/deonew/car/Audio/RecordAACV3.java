@@ -30,14 +30,17 @@ public class RecordAACV3 {
     private FileOutputStream audioFos;
     private String audioPath = Environment.getExternalStorageDirectory() + "/carTemp.aac";
 
-    private AudioRecord mAudioRec;
+    private AudioRecord mAudioRecorder;
     //for startSendH264
     private int sampleRate = 44100;
     private int channelCount = 2;
     //stereo
     private int channelConf = AudioFormat.CHANNEL_IN_STEREO;
+//    private int channelConf = AudioFormat.CHANNEL_IN_MONO;
     //data format
     private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+    private int aacProfile = MediaCodecInfo.CodecProfileLevel.AACObjectLC;
+    private int keyBitRate = 64000;
     //generate by config
     //used when read data
     private int miniBuffSize;
@@ -55,9 +58,9 @@ public class RecordAACV3 {
     }
 
     public void initAudioRec(){
-        miniBuffSize = AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat)*2;
-        //startSendH264 mAudioRec according to minibuff and given conf
-        mAudioRec = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConf, audioFormat, miniBuffSize);
+        miniBuffSize = AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat);
+        //startSendH264 mAudioRecorder according to minibuff and given conf
+        mAudioRecorder = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, channelConf, audioFormat, miniBuffSize);
         //startSendH264 fos
         File file=new File(audioPath);
         if (file.exists()){
@@ -68,16 +71,23 @@ public class RecordAACV3 {
 //            audioFis = new FileInputStream(audioPath);
         }catch(FileNotFoundException e){}
 
-        //codec config
-        MediaFormat f = MediaFormat.createAudioFormat("audio/mp4a-latm",sampleRate,channelCount);
-        //"aac-profile"
-        f.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
-        //bit rate
-        f.setInteger(MediaFormat.KEY_BIT_RATE, 25600);
+
+
         //create aac type codec
         try{
             mAudioCodec = MediaCodec.createEncoderByType("audio/mp4a-latm");//encoder
         }catch (IOException e){}
+
+        //----------codec config
+        MediaFormat f = MediaFormat.createAudioFormat("audio/mp4a-latm",sampleRate,channelCount);
+        //"aac-profile"
+        f.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
+        //bit rate
+        f.setInteger(MediaFormat.KEY_BIT_RATE, keyBitRate);
+
+        f.setInteger(MediaFormat.KEY_AAC_PROFILE, aacProfile);
+//        f.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 100 * 1024);
+
         mAudioCodec.configure(f,null,null,MediaCodec.CONFIGURE_FLAG_ENCODE);
         mAudioCodec.start();
         Log.d(TAG,"audio codec");
@@ -86,7 +96,7 @@ public class RecordAACV3 {
     public void startRecord(){
         setRecordAacStatus(true);
         initAudioRec();
-        mAudioRec.startRecording();
+        mAudioRecorder.startRecording();
         new RecordAacThread().start();
     }
     private boolean isRecordingAac = false;
@@ -111,7 +121,7 @@ public class RecordAACV3 {
             if (inputBuffIndex>=0){
                 ByteBuffer bybu = mAudioCodec.getInputBuffer(inputBuffIndex);
                 bybu.clear();
-                int len = mAudioRec.read(bybu,miniBuffSize);
+                int len = mAudioRecorder.read(bybu,miniBuffSize);
                 mAudioCodec.queueInputBuffer(inputBuffIndex,0,len, System.nanoTime()/1000,0);
             }
 

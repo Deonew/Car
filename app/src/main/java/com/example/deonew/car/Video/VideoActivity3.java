@@ -225,22 +225,29 @@ public class VideoActivity3 extends FragmentActivity {
     public byte[] getOneNalu(){
         int n = getNextIndex();
         if (n <= 0){
-            Log.d(TAG,"nulllll"+"   "+n);
+//            Log.d(TAG,"nulllll"+"   "+n);
 //            Log.d(TAG,n+"");
             return null;
         }
-//        Log.d(TAG,"get one"+n);
         byte[] naluu = new byte[n-currentBuffStart];
-        Log.d(TAG,n+"--n");
-        Log.d(TAG,currentBuffStart+"");
         System.arraycopy(currentBuff, currentBuffStart, naluu, 0, n-currentBuffStart);
 
         //handle currentBuff
         System.arraycopy(currentBuff, n , currentBuff, 0, currentBuff.length - n);
+//        System.arraycopy(currentBuff, n , currentBuff, 0, currentBuffEnd - n);
 
         //set index
         currentBuffStart = 0;
         currentBuffEnd = currentBuffEnd - naluu.length;
+
+        ByteBuffer b = ByteBuffer.allocate(4);
+        b.putInt(0x00000001);
+        byte[] naluHead = b.array();
+        if (naluu[0]!=naluHead[0] || naluu[1]!=naluHead[1] || naluu[2]!=naluHead[2] || naluu[3]!=naluHead[3]){
+            Log.d("sssssssssssss","buzhengque");
+//            naluu = null;
+            return null;
+        }
         return naluu;
     }
     //added by deonew
@@ -291,7 +298,7 @@ public class VideoActivity3 extends FragmentActivity {
         return nextIndex;
     }
 
-    //record
+        //record
     private boolean isRecordH264 = false;
     public void startRecordH264() {
 //        Log.d(TAG,"stop record");

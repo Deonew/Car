@@ -55,7 +55,8 @@ public class AudioSocketWrapper {
             try {
 //                audioSocket = new Socket("10.202.0.207",18888);
 //                audioSocket = new Socket("10.105.36.224",18887);
-                audioSocket = new Socket("10.105.36.224",18888);
+//                audioSocket = new Socket("10.105.36.224",18888);
+                audioSocket = new Socket("10.202.0.203",18888);
                 sendStream = audioSocket.getOutputStream();
                 recvSream = audioSocket.getInputStream();
 
@@ -186,38 +187,38 @@ public class AudioSocketWrapper {
             super.run();
 
             mainAC.getH264RecvQueue().clear();
-            try {
-                while(true){
-
-                    if (isRecvAAC && recvSream!=null){
+            while(true){
+                if(isRecvAAC && recvSream!=null){
+                    try {
                         byte[] readByte = new byte[2000];
                         int n;
                         while((n = recvSream.read(readByte))!=-1){
-                            Log.d(TAG,"receive");
-
-                            //with timestamp
-//                            byte[] audioData = new byte[n];
-//                            System.arraycopy(readByte,0,audioData,0,n);
-//                            //get timestamp
-//                            //get audio data
-//                            byte[] toOffer = new byte[n-8];
-//                            System.arraycopy(readByte,8,toOffer,0,n-8);
+//                                Log.d(TAG,"receive:"+mainAC.getH264RecvQueue().size());
+//                                Log.d(TAG,""+mainAC.getH264RecvQueue().size());
 
                             //without timestamp
-                            byte[]toOffer = new byte[n];
+                            byte[] toOffer = new byte[n];
                             System.arraycopy(readByte,0,toOffer,0,n);
                             mainAC.getAACRecvQueue().offer(toOffer);
-                            Log.d(TAG,"recv "+mainAC.getAACRecvQueue().size());
+
+                            //with timestamp
+                            //get timestamp
+//                                byte[] t = new byte[8];
+//                                byte[] toOffer = new byte[n-8];
+//                                System.arraycopy(readByte,0,t,0,8);
+//                                //data
+//                                System.arraycopy(readByte,8,toOffer,0,n-8);
+//                                mainAC.getH264RecvQueue().offer(toOffer);
+                            Log.d(TAG,"receive length:"+n+"");
                         }
-                    }else {
-                        try{
-                            Thread.sleep(20);
-                        }catch (InterruptedException e){}
+                    }
+                    catch (IOException e){
+                        Log.d(TAG,"wrong");
                     }
                 }
-            }catch (IOException e){
-                Log.d(TAG,"wrong");
             }
+
+
         }
     }
 
