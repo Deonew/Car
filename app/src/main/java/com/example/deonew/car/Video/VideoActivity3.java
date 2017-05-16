@@ -29,6 +29,7 @@ public class VideoActivity3 extends FragmentActivity {
     private VideoSocketWrapper videoSocketWrapper;
 
 
+    private boolean isSendH264 = false;
     private boolean isRecordH264 = false;
     private boolean isRecvAAC = false;
 
@@ -52,16 +53,6 @@ public class VideoActivity3 extends FragmentActivity {
 
         audioFragmentV3 = new AudioFragmentV3();
         fragmentManager.beginTransaction().add(R.id.audioControlFragment,audioFragmentV3).commit();
-
-//        SurfaceView sv = (SurfaceView) findViewById(R.id.videoPlay);
-//        showFragment.initMediaCodec();
-//        showFragment.initMediaCodec(sv);
-        Log.d(TAG,"init codec");
-//        sendH264 = new SendH264(this);
-//        sendH264V3 = new SendH264V3(this);
-//
-//        recvH264V3= new RecvH264V3(this);
-
 
         audioSocketWrapper = new AudioSocketWrapper(this,getAACSendQueue(),getAACRecvQueue());
         videoSocketWrapper = new VideoSocketWrapper(this,getAACSendQueue(),getAACRecvQueue());
@@ -175,30 +166,24 @@ public class VideoActivity3 extends FragmentActivity {
 //            last = len + last;
 
             //not use timestamp
-            H264SendQueue.offer(tmp);
+//            H264SendQueue.offer(tmp);
 //            Log.d(TAG,tmp.length+"");
 
             //add time stamp
-//            byte[] toOfferWithTS = new byte[tmp.length+8];
-//            long t = System.currentTimeMillis();
-//            ByteBuffer bf = ByteBuffer.allocate(8);
-//            bf.putLong(0,t);
-//            byte [] timeArr = bf.array();
+            byte[] toOfferWithTS = new byte[tmp.length+8];
+            long t = System.currentTimeMillis();
+            ByteBuffer bf = ByteBuffer.allocate(8);
+            bf.putLong(0,t);
+            byte [] timeArr = bf.array();
 //            Log.d(TAG,t+" time");
-//            System.arraycopy(timeArr,0,toOfferWithTS,0,8);
-//            System.arraycopy(tmp,0,toOfferWithTS,8,tmp.length);
-//            H264SendQueue.offer(toOfferWithTS);
+            System.arraycopy(timeArr,0,toOfferWithTS,0,8);
+            System.arraycopy(tmp,0,toOfferWithTS,8,tmp.length);
+            H264SendQueue.offer(toOfferWithTS);
 //            Log.d(TAG,toOfferWithTS.length+"");
             totalSendcnt++;
         }
 //        Log.d(TAG,"offer one h264 and send size:"+getH264SendQueue().size()+"         "+ totalSendcnt);
     }
-
-
-    //send h264
-    private SendH264V3 sendH264V3;
-    private boolean isSendH264 = false;
-
 
     public void sendH264Click(){
         isSendH264 = !isSendH264;
@@ -243,8 +228,6 @@ public class VideoActivity3 extends FragmentActivity {
     public byte[] getOneNalu(){
         int n = getNextIndex();
         if (n <= 0){
-//            Log.d(TAG,"nulllll"+"   "+n);
-//            Log.d(TAG,n+"");
             return null;
         }
         byte[] naluu = new byte[n-currentBuffStart];
@@ -252,7 +235,6 @@ public class VideoActivity3 extends FragmentActivity {
 
         //handle currentBuff
         System.arraycopy(currentBuff, n , currentBuff, 0, currentBuff.length - n);
-//        System.arraycopy(currentBuff, n , currentBuff, 0, currentBuffEnd - n);
 
         //set index
         currentBuffStart = 0;
@@ -262,8 +244,7 @@ public class VideoActivity3 extends FragmentActivity {
         b.putInt(0x00000001);
         byte[] naluHead = b.array();
         if (naluu[0]!=naluHead[0] || naluu[1]!=naluHead[1] || naluu[2]!=naluHead[2] || naluu[3]!=naluHead[3]){
-            Log.d("sssssssssssss","buzhengque");
-//            naluu = null;
+            Log.d(TAG,"buzhengque");
             return null;
         }
         return naluu;
@@ -333,6 +314,10 @@ public class VideoActivity3 extends FragmentActivity {
         camera2BasicFragment.stopRecordH264();
         recordH264Btn.setText("RecordH264");
     }
+
+
+
+
 
     //------------------------------------aac send
     private boolean isSendAAC = false;

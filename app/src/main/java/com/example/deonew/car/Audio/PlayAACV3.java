@@ -334,7 +334,7 @@ public class PlayAACV3 {
     }
     public byte[] getOneAACFrame(){
         int n = getNextIndex();
-        if (n == -1) {
+        if (n <=0) {
             return null;
         }
 //        System.out.println(n);
@@ -345,18 +345,16 @@ public class PlayAACV3 {
         currentBuffEnd = currentBuffEnd - naluu.length;
 
         //check head
-//        ByteBuffer b = ByteBuffer.allocate(4);
-//        b.putInt(0xfff95080);
-//        byte[] naluHead = b.array();
-//        if (naluu[0]!=naluHead[0] || naluu[1]!=naluHead[1] || naluu[1]!=naluHead[1] || naluu[1]!=naluHead[1]){
-//            naluu = naluHead;
-//        }
-
-        
+        ByteBuffer b = ByteBuffer.allocate(4);
+        b.putInt(0xfff95080);
+        byte[] naluHead = b.array();
+        if (naluu[0]!=naluHead[0] || naluu[1]!=naluHead[1] || naluu[1]!=naluHead[1] || naluu[1]!=naluHead[1]){
+            naluu = naluHead;
+        }
         return naluu;
     }
-    private int nextAACHead = -1;
     public int getNextIndex(){
+        int nextAACHead;
         nextAACHead = getNextIndexOnce();
         while(nextAACHead == -1) {
             if (!recvQueue.isEmpty()) {
@@ -378,7 +376,7 @@ public class PlayAACV3 {
 //        b.putInt(0xfff15080);//aac file
         b.putInt(0xfff95080);//record
         byte[] naluHead = b.array();
-        int i = 0;
+        int i;
         int index = 0;
         for(i = currentBuffStart+2; i < currentBuffEnd;i++){
             while (index > 0 && currentBuff[i] != naluHead[index]) {
