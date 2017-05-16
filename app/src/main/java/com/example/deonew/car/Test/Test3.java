@@ -1,4 +1,4 @@
-package com.example.deonew.car;
+package com.example.deonew.car.Test;
 
 import android.util.Log;
 
@@ -28,6 +28,14 @@ public class Test3 {
 
             System.arraycopy(b,i*1000,tmp,0,len);
             System.out.println("pack "+i+ " length:"+len);
+        }
+
+        for (int t = 0;t<10;t++){
+            if (t == 8){
+                t++;
+                t++;
+            }
+            System.out.println("t: "+t);
         }
     }
 }

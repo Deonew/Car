@@ -23,11 +23,11 @@ import java.nio.ByteBuffer;
  * Created by deonew on 4/21/17.
  */
 
-public class ShowFragment extends Fragment {
-    private final String TAG = "ShowFragment";
+public class PlayH264Fragment extends Fragment {
+    private final String TAG = "PlayH264Fragment";
 
     VideoActivity3 mainAC;
-    public ShowFragment(){
+    public PlayH264Fragment(){
     }
     @Nullable
     @Override

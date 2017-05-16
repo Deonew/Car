@@ -99,9 +99,12 @@ public class RecordAACV3 {
         mAudioRecorder.startRecording();
         new RecordAacThread().start();
     }
-    private boolean isRecordingAac = false;
+    public void stopRecord(){
+        isRecordAAC = false;
+    }
+    private boolean isRecordAAC = false;
     public void setRecordAacStatus(boolean value){
-        isRecordingAac = value;
+        isRecordAAC = value;
     }
 
     class RecordAacThread extends Thread{
@@ -109,7 +112,7 @@ public class RecordAACV3 {
         public void run() {
             //socket connect
             while(true){
-                if (isRecordingAac){
+                if (isRecordAAC){
                     Log.d(TAG,"read data");
                     readAudioData();
                 }
@@ -170,8 +173,8 @@ public class RecordAACV3 {
                         System.arraycopy(encodedData,0,toOffer,8,encodedData.length);
 
                         //put data to the queue
-//                        mainAC.offerAudioSendQueue(toOffer);
-                        mainAC.offerAudioSendQueue(encodedData);
+                        mainAC.offerAudioSendQueue(toOffer);
+//                        mainAC.offerAudioSendQueue(encodedData);
 
                         Log.d(TAG,""+ mainAC.getAACSendQueue().size());
 

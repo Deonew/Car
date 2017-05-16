@@ -8,6 +8,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.deonew.car.R;
 
@@ -16,16 +17,16 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity{
     private MainViewPagerAdapter mainViewPagerAdapter;
-    private static final String TAG = MainActivity.class.getSimpleName();
+//    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = "MainActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Log.d(TAG,"ok");
-
-//        setTagsForButtons();
-
+        Log.d(TAG,"okkkkkk");
+        Toast.makeText(getApplicationContext(), "默认Toast样式", Toast.LENGTH_SHORT).show();
+        getWifiIP();
 
         //tablayout
         TabLayout mainTabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
@@ -58,9 +59,6 @@ public class MainActivity extends AppCompatActivity{
         mainTabLayout.setTabMode(TabLayout.MODE_FIXED);
 
 
-
-
-
     }
 
     //-----------wifi处理部分
@@ -74,6 +72,7 @@ public class MainActivity extends AppCompatActivity{
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         int ipInt = wifiInfo.getIpAddress();
         String ipString = intToIp(ipInt);
+        Log.d(TAG," ip: "+ipString);
         return ipString;
     }
 

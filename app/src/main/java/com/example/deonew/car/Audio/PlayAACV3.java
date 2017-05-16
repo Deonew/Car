@@ -132,6 +132,8 @@ public class PlayAACV3 {
             boolean sawOutputEOS = false;
             while (true){
                 if (isRunning){
+                    if (recvQueue.size()>10){
+
                     int inputBufIndex = mDecoder.dequeueInputBuffer(kTimeOutUs);
                     if (inputBufIndex >= 0) {
                         Log.d(TAG,"input available");
@@ -145,8 +147,14 @@ public class PlayAACV3 {
                             b = getOneAACFrame();
                         }
                         if (b == null){
-                            b= new byte[]{0xf, 0xf, 0xf, 0x9,0x5,0x0,0x8,0x0};//0xfff95080
+//                            b= new byte[]{0xf, 0xf, 0xf, 0x9,0x5,0x0,0x8,0x0};//0xfff95080
+                            b= new byte[]{(byte)0x0B, (byte)0x00, (byte)0x21, (byte)0x10, (byte)0x05, (byte)0x00, (byte)0xA0, (byte)0x19, (byte)0x33, (byte)0x87, (byte)0xC0, (byte)0x00, (byte)0x7E};
                         }
+
+                        //test
+//                        b= new byte[]{0xf, 0xf, 0xf, 0x9,0x5,0x0,0x8,0x0};//0xfff95080
+//                        b= new byte[]{0x0B, 0x00, 0x21, 0x10, 0x05, 0x00, (byte)0xA0, 0x19, 0x33, (byte)0x87, (byte)0xC0, 0x00, 0x7E};
+
                         Log.d(TAG,"aac size: "+ recvQueue.size());
                         dstBuf.put(b);
                         int sampleSize = b.length;
@@ -158,6 +166,8 @@ public class PlayAACV3 {
                         } else {
                             mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, System.nanoTime()/1000, 0);
                         }
+                    }
+
                     }
 
                     int outputBufferIndex = mDecoder.dequeueOutputBuffer(info, kTimeOutUs);
@@ -191,7 +201,6 @@ public class PlayAACV3 {
                             sawOutputEOS = true;
                             Log.d(TAG,"end");
                         }
-
 
                     }
                     else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {

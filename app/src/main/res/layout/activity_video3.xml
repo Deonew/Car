@@ -53,21 +53,21 @@
             android:id="@+id/record"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="recordH264"
+            android:text="RecordH264"
             android:textAllCaps="false"/>
 
         <Button
             android:id="@+id/sendBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="send"
+            android:text="Send"
             android:textAllCaps="false"/>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/recvH264V3"
-            android:text="recv"
+            android:text="Recv"
             android:textAllCaps="false"/>
 
         <Button
