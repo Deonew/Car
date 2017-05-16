@@ -24,15 +24,12 @@ public class AudioSocketWrapper {
     private String TAG ="AudioSocketWrapper";
 
     private VideoActivity3 mainAC;
-    private Socket audioSocket = null;
     private sendAACThread sendTH = null;
     private recvAACThread recvTH = null;
     private BlockingQueue audioSendQueue;
     private BlockingQueue audioRecvQueue;
     private boolean isSendAAC = false;
-    private OutputStream sendStream = null;
     private boolean isReceiveAAC = false;
-    private InputStream recvSream = null;
 
 
 
@@ -51,7 +48,7 @@ public class AudioSocketWrapper {
         initFile();
 
         try {
-            ds = new DatagramSocket(8889);
+            ds = new DatagramSocket(9999);
         }catch (IOException e){}
     }
 
@@ -89,7 +86,7 @@ public class AudioSocketWrapper {
                         try{
                             byte[] tmp = (byte[])mainAC.getAACSendQueue().poll();
                             InetAddress sendAddr = InetAddress.getByName("10.202.0.202");
-                            DatagramPacket dpSend = new DatagramPacket(tmp,tmp.length,sendAddr,8889);
+                            DatagramPacket dpSend = new DatagramPacket(tmp,tmp.length,sendAddr,9999);
                             ds.send(dpSend);
                             c++;
                             Log.d(TAG,"udp send one packet "+c);
@@ -128,9 +125,11 @@ public class AudioSocketWrapper {
                         //valid data
                         byte[] toOffer = new byte[len];
                         System.arraycopy(buffer,0,toOffer,0,len);
+
                         mainAC.getAACRecvQueue().offer(toOffer);
+
                         c++;
-                        Log.d(TAG,"udp receive one packet, total: "+c);
+                        Log.d(TAG,"udp receive one packet, total: "+c+" last:"+mainAC.getAACRecvQueue().size()+"length:"+(len-8));
                     }catch (IOException e){}
                 }
 

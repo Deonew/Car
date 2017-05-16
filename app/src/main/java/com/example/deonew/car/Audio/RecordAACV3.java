@@ -154,8 +154,8 @@ public class RecordAACV3 {
                     int profile = 2;  //AAC LC
                     int freqIdx = 4;  //44.1KHz
                     int chanCfg = 2;  //CPE
-                    encodedData[0] = (byte)0xFF;
-                    encodedData[1] = (byte)0xF9;
+                    encodedData[0] = (byte)0xff;
+                    encodedData[1] = (byte)0xff9;
                     encodedData[2] = (byte)(((profile-1)<<6) + (freqIdx<<2) +(chanCfg>>2));
                     encodedData[3] = (byte)(((chanCfg&3)<<6) + (encodedData.length>>11));
                     encodedData[4] = (byte)((encodedData.length&0x7FF) >> 3);
@@ -167,14 +167,14 @@ public class RecordAACV3 {
                         audioFos.write(encodedData,0,encodedData.length);
 
                         //add timestamp
-                        byte[] aacts = mAACTimeStamp.getTimeStamp();
-                        byte[] toOffer = new byte[encodedData.length+8];
-                        System.arraycopy(aacts,0,toOffer,0,8);
-                        System.arraycopy(encodedData,0,toOffer,8,encodedData.length);
+//                        byte[] aacts = mAACTimeStamp.getTimeStamp();
+//                        byte[] toOffer = new byte[encodedData.length+8];
+//                        System.arraycopy(aacts,0,toOffer,0,8);
+//                        System.arraycopy(encodedData,0,toOffer,8,encodedData.length);
 
                         //put data to the queue
-                        mainAC.offerAudioSendQueue(toOffer);
-//                        mainAC.offerAudioSendQueue(encodedData);
+//                        mainAC.offerAudioSendQueue(toOffer);
+                        mainAC.offerAudioSendQueue(encodedData);
 
                         Log.d(TAG,""+ mainAC.getAACSendQueue().size());
 

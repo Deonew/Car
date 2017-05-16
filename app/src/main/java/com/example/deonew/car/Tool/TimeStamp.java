@@ -7,6 +7,22 @@ import java.nio.ByteBuffer;
  */
 
 public class TimeStamp {
+    private static long currentAudioStamp = System.currentTimeMillis();;
+    private static long currentVideoStamp = System.currentTimeMillis();;
+
+    static public long getAudioStamp(){
+        return currentAudioStamp;
+    }
+    static public void setAudioStamp(long ast){
+        currentAudioStamp = ast;
+    }
+    static public long getVideoStamp(){
+        return currentVideoStamp;
+    }
+    static public void setVideoStamp(long vst){
+        currentVideoStamp = vst;
+    }
+
     public byte[] getTimeStamp(){
         long t = System.currentTimeMillis();
         ByteBuffer bf = ByteBuffer.allocate(8);

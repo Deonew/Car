@@ -78,7 +78,6 @@ public class VideoSocketWrapper {
                     }
                 }
 
-
 //                if (isSendH264){
 //                    if (!mainAC.getH264SendQueue().isEmpty()){
 //                        byte[] tmp = (byte[])mainAC.getH264SendQueue().poll();
@@ -97,8 +96,6 @@ public class VideoSocketWrapper {
 //                        Thread.sleep(5);
 //                    }catch (InterruptedException e){}
 //                }
-
-
             }
         }
     }
@@ -133,15 +130,16 @@ public class VideoSocketWrapper {
                             int len = dpRecv.getLength();
 
                             //valid data
-//                            byte[] toOffer = new byte[len];
-//                            System.arraycopy(buffer,0,toOffer,0,len);
+                            byte[] toOffer = new byte[len];
+                            System.arraycopy(buffer,0,toOffer,0,len);
 
 //                          with timestamp
 //                           get timestamp
-                            byte[] t = new byte[8];
-                            System.arraycopy(buffer,0,t,0,8);
-                            byte[] toOffer = new byte[len-8];
-                            System.arraycopy(buffer,8,toOffer,0,len-8);
+//                            byte[] t = new byte[8];
+//                            System.arraycopy(buffer,0,t,0,8);
+//                            byte[] toOffer = new byte[len-8];
+//                            System.arraycopy(buffer,8,toOffer,0,len-8);
+//
                             mainAC.getH264RecvQueue().offer(toOffer);
                             Log.d(TAG,"udp receive one packet"+dpRecv.getData().length+" "+dpRecv.getLength());
                         }catch (IOException e){}

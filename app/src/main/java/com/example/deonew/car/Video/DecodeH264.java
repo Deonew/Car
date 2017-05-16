@@ -157,10 +157,6 @@ public class DecodeH264 {
             //                        ByteBuffer byteBuffer = inputBuffers[inIndex];
                             byteBuffer.clear();
 
-                            //放入一帧数据
-            //                        byte[] b = getAFrame();
-            //                        byteBuffer.put(b);
-
                             //队列获取文件数据
                             byte[] b = getOneNalu();
                             byteBuffer.put(b);

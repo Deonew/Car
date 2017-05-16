@@ -143,14 +143,14 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
     //
-    private SendH264 sendH264;
+//    private SendH264 sendH264;
     private BlockingQueue<byte[]> H264SendQueue = new ArrayBlockingQueue<byte[]>(10000);
     public BlockingQueue getH264SendQueue(){
         return H264SendQueue;
     }
 
     //
-    private RecvH264 recvH264 = null;
+//    private RecvH264 recvH264 = null;
 
 
     private DecodeH264 decodeH264;
@@ -203,12 +203,12 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
 
 
 
-        sendH264 = new SendH264(this);
+//        sendH264 = new SendH264(this);
 //        sendH264.connectToBox();
 //        sendH264.connectToPhone();
 
 
-        recvH264 = new RecvH264(this);
+//        recvH264 = new RecvH264(this);
 
 
         Log.d(TAG,"11111111");
@@ -629,13 +629,13 @@ public class VideoActivity2 extends Activity implements View.OnClickListener {
     }
 
     public void SendH264(View v){
-        sendH264.startSendH264();
+//        sendH264.startSendH264();
     }
 
 
 
     public void recvH264(View v){
-        recvH264.startRecvH264();
+//        recvH264.startRecvH264();
         Log.d("ssssssssssssss","recv h264");
     }
 

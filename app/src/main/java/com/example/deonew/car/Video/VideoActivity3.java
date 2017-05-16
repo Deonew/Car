@@ -11,6 +11,7 @@ import android.widget.EditText;
 import com.example.deonew.car.Audio.AudioFragmentV3;
 import com.example.deonew.car.Audio.AudioSocketWrapper;
 import com.example.deonew.car.R;
+import com.example.deonew.car.Tool.TimeStamp;
 import com.example.deonew.car.Video.camera.Camera2BasicFragment;
 
 import java.net.Socket;
@@ -22,7 +23,7 @@ public class VideoActivity3 extends FragmentActivity {
     private final String TAG = "VideoActivity3";
 
 
-    private PlayH264Fragment showFragment;
+    private PlayH264Fragment playH264Fragment;
     private AudioFragmentV3 audioFragmentV3;
     private Camera2BasicFragment camera2BasicFragment;
     private AudioSocketWrapper audioSocketWrapper;
@@ -32,6 +33,9 @@ public class VideoActivity3 extends FragmentActivity {
     private boolean isSendH264 = false;
     private boolean isRecordH264 = false;
     private boolean isRecvAAC = false;
+
+    private Button sendH264Btn = null;
+    private Button recordH264Btn = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +52,8 @@ public class VideoActivity3 extends FragmentActivity {
 
         //show video fragment
         FragmentManager fragmentManager =getSupportFragmentManager();
-        showFragment = new PlayH264Fragment();
-        fragmentManager.beginTransaction().add(R.id.showView,showFragment).commit();
+        playH264Fragment = new PlayH264Fragment();
+        fragmentManager.beginTransaction().add(R.id.showView, playH264Fragment).commit();
 
         audioFragmentV3 = new AudioFragmentV3();
         fragmentManager.beginTransaction().add(R.id.audioControlFragment,audioFragmentV3).commit();
@@ -65,14 +69,11 @@ public class VideoActivity3 extends FragmentActivity {
 
         editText = (EditText)findViewById(R.id.sendEditText);
 
-
     }
 
 
 
 
-    private Button sendH264Btn = null;
-    private Button recordH264Btn = null;
     public void initBtn(){
 
         recordH264Btn = (Button)findViewById(R.id.record);
@@ -180,7 +181,7 @@ public class VideoActivity3 extends FragmentActivity {
             System.arraycopy(tmp,0,toOfferWithTS,8,tmp.length);
             H264SendQueue.offer(toOfferWithTS);
 //            Log.d(TAG,toOfferWithTS.length+"");
-            totalSendcnt++;
+//            totalSendcnt++;
         }
 //        Log.d(TAG,"offer one h264 and send size:"+getH264SendQueue().size()+"         "+ totalSendcnt);
     }
@@ -213,8 +214,16 @@ public class VideoActivity3 extends FragmentActivity {
 
     //
     public void startH264Play(){
-        showFragment.startPlay();
+        playH264Fragment.startPlay();
     }
+
+    public void videoSleep(long l){
+        playH264Fragment.VideoSleep(l);
+    }
+    public void audioSleep(long l){
+        audioFragmentV3.audioSleep(l);
+    }
+
 
     //h264 recv queue
     private BlockingQueue<byte[]> H264RecvQueue = new ArrayBlockingQueue<byte[]>(10000);
@@ -244,13 +253,12 @@ public class VideoActivity3 extends FragmentActivity {
         b.putInt(0x00000001);
         byte[] naluHead = b.array();
         if (naluu[0]!=naluHead[0] || naluu[1]!=naluHead[1] || naluu[2]!=naluHead[2] || naluu[3]!=naluHead[3]){
-            Log.d(TAG,"buzhengque");
+            Log.d(TAG,"head wrong");
             return null;
         }
         return naluu;
     }
-    //added by deonew
-//    private int nextNaluHead = -1;
+    private boolean isSynchronized = false;
     public int getNextIndex(){
         int nextNaluHead;
         nextNaluHead = getNextIndexOnce();
@@ -263,12 +271,52 @@ public class VideoActivity3 extends FragmentActivity {
                 break;
             }else{
                 byte[] tmp = (byte[])getH264RecvQueue().poll();
-                System.arraycopy(tmp,0,currentBuff,currentBuffEnd,tmp.length);
-                currentBuffEnd = currentBuffEnd + tmp.length;
+
+                int len = tmp.length;
+                //set timestamp
+                byte[] t = new byte[8];
+                System.arraycopy(tmp,0,t,0,8);
+                ByteBuffer bf = ByteBuffer.allocate(8);
+                bf.put(t);
+                bf.flip();
+                long ts = bf.getLong();
+                TimeStamp.setVideoStamp(ts);
+                Log.d(TAG,"video time "+ts);
+
+                long t1 = TimeStamp.getAudioStamp();
+                long t2 = TimeStamp.getVideoStamp();
+                Log.d(TAG,"isSynchronized"+isSynchronized+" time delta"+Math.abs(t1-t2));
+
+                if (!isSynchronized){
+                    long au = TimeStamp.getAudioStamp();
+                    long vi = TimeStamp.getVideoStamp();
+                    long delta = au - vi;
+                    long deltaABS = Math.abs(delta);
+                    if ( deltaABS > 50){
+
+                        if (delta<0){
+                            //audio behind
+                            videoSleep(deltaABS);
+                            isSynchronized = true;
+                        }else {
+                            //video behind
+                            audioSleep(deltaABS);
+                            isSynchronized = true;
+                        }
+                    }else {
+                        isSynchronized = true;
+                    }
+                }
+
+                byte[] validData = new byte[len-8];
+                System.arraycopy(tmp,8,validData,0,len-8);
+                System.arraycopy(validData,0,currentBuff,currentBuffEnd,validData.length);
+                currentBuffEnd = currentBuffEnd + validData.length;
+
+//                System.arraycopy(tmp,0,currentBuff,currentBuffEnd,tmp.length);
+//                currentBuffEnd = currentBuffEnd + tmp.length;
                 nextNaluHead = getNextIndexOnce();
             }
-//            cnt++;
-//            Log.d(TAG,"poll"+cnt);
         }
         nextNaluHead = nextNaluHead - 3;
         // currentBuffStart = nextNaluHead;
@@ -379,8 +427,17 @@ public class VideoActivity3 extends FragmentActivity {
                 break;
             byte[] tmp = new byte[len];
             System.arraycopy(b,i*1000,tmp,0,len);
-            AACSendQueue.offer(tmp);
-//            Log.d(TAG,tmp.length+"");
+//            AACSendQueue.offer(tmp);
+
+            //add time stamp
+            byte[] toOfferWithTS = new byte[tmp.length+8];
+            long t = System.currentTimeMillis();
+            ByteBuffer bf = ByteBuffer.allocate(8);
+            bf.putLong(0,t);
+            byte [] timeArr = bf.array();
+            System.arraycopy(timeArr,0,toOfferWithTS,0,8);
+            System.arraycopy(tmp,0,toOfferWithTS,8,tmp.length);
+            AACSendQueue.offer(toOfferWithTS);
         }
     }
 

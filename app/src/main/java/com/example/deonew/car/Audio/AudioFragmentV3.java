@@ -28,7 +28,7 @@ public class AudioFragmentV3 extends Fragment {
 
     private Button sendAACBtn = null;
     private Button recordAACBtn = null;
-
+    private Button recvAACBtn = null;
 
     @Nullable
     @Override
@@ -41,14 +41,7 @@ public class AudioFragmentV3 extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        //
-//        sendAAC = new SendAAC(mainAC);
         recordAACV3 = new RecordAACV3(mainAC);
-
-//        sendAACV3 = new SendAACV3(mainAC);
-
-//        recvAACV3 = new RecvAACV3(mainAC);
-
         playAACV3 = new PlayAACV3(mainAC);
     }
 
@@ -60,7 +53,10 @@ public class AudioFragmentV3 extends Fragment {
 
     }
 
-    private Button recvAACBtn = null;
+    public void audioSleep(long l){
+        playAACV3.audioSleep(l);
+    }
+
     public void initBtn(){
         recordAACBtn = (Button)getActivity().findViewById(R.id.recordAACV3);
         recordAACBtn.setOnClickListener(new View.OnClickListener() {

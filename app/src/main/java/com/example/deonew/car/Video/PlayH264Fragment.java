@@ -111,9 +111,16 @@ public class PlayH264Fragment extends Fragment {
     private boolean isPlay = false;
     public void startPlay(){
         if (!isPlay){
-            new decodeH2Thread().start();
+            decodeTH = new decodeH2Thread();
+            decodeTH.start();
             isPlay = true;
         }
+    }
+    private decodeH2Thread decodeTH = null;
+    public void VideoSleep(long l){
+        try {
+            decodeTH.sleep(l);
+        }catch (InterruptedException e){}
     }
     class decodeH2Thread extends Thread{
         @Override
@@ -125,7 +132,6 @@ public class PlayH264Fragment extends Fragment {
                     long startMs = System.currentTimeMillis();
                     long timeoutUs = 10000;
 
-//                    setRate();
                     int inIndex = mPlayCodec.dequeueInputBuffer(timeoutUs);
                     if (inIndex >= 0) {
                         ByteBuffer byteBuffer = mPlayCodec.getInputBuffer(inIndex);
@@ -133,8 +139,9 @@ public class PlayH264Fragment extends Fragment {
 
 //                        byte[] b = new byte[]{0x00, 0x00, 0x01, 0x20};
                         byte[] b = null;
-                        int r = getPlayRate();
-                        Log.d(TAG,"rateeeeeeeeeeee: "+r);
+//                        int r = getPlayRate();
+//                        Log.d(TAG,"rateeeeeeeeeeee: "+r);
+
                         for (int t = 0;t<1;t++){
                             b = mainAC.getOneNalu();
                         }
