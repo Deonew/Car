@@ -7,8 +7,8 @@ import java.nio.ByteBuffer;
  */
 
 public class TimeStamp {
-    private static long currentAudioStamp = System.currentTimeMillis();;
-    private static long currentVideoStamp = System.currentTimeMillis();;
+    private static long currentAudioStamp = 0;
+    private static long currentVideoStamp = 0;
 
     static public long getAudioStamp(){
         return currentAudioStamp;

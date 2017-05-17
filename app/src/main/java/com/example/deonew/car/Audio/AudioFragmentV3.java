@@ -22,8 +22,6 @@ public class AudioFragmentV3 extends Fragment {
 
     private VideoActivity3 mainAC;
     private RecordAACV3 recordAACV3;
-    private SendAACV3 sendAACV3;
-    private RecvAACV3 recvAACV3;
     private PlayAACV3 playAACV3;
 
     private Button sendAACBtn = null;
@@ -53,9 +51,7 @@ public class AudioFragmentV3 extends Fragment {
 
     }
 
-    public void audioSleep(long l){
-        playAACV3.audioSleep(l);
-    }
+
 
     public void initBtn(){
         recordAACBtn = (Button)getActivity().findViewById(R.id.recordAACV3);
@@ -128,10 +124,12 @@ public class AudioFragmentV3 extends Fragment {
     }
 
     public void startPlayAACV3(){
-
         playAACV3.start();
     }
 
-
+    public void audioSleep(long l){
+        playAACV3.audioSleep(l);
+        Log.d(TAG,"audio sleep"+l);
+    }
 
 }

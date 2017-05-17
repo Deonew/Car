@@ -111,15 +111,15 @@ public class PlayH264Fragment extends Fragment {
     private boolean isPlay = false;
     public void startPlay(){
         if (!isPlay){
-            decodeTH = new decodeH2Thread();
-            decodeTH.start();
+            decodeH264TH = new decodeH2Thread();
+            decodeH264TH.start();
             isPlay = true;
         }
     }
-    private decodeH2Thread decodeTH = null;
+    private decodeH2Thread decodeH264TH = null;
     public void VideoSleep(long l){
         try {
-            decodeTH.sleep(l);
+            decodeH264TH.sleep(l);
         }catch (InterruptedException e){}
     }
     class decodeH2Thread extends Thread{

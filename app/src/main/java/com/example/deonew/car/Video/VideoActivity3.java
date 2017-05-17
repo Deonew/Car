@@ -224,7 +224,6 @@ public class VideoActivity3 extends FragmentActivity {
         audioFragmentV3.audioSleep(l);
     }
 
-
     //h264 recv queue
     private BlockingQueue<byte[]> H264RecvQueue = new ArrayBlockingQueue<byte[]>(10000);
     public BlockingQueue getH264RecvQueue(){
@@ -281,30 +280,43 @@ public class VideoActivity3 extends FragmentActivity {
                 bf.flip();
                 long ts = bf.getLong();
                 TimeStamp.setVideoStamp(ts);
-                Log.d(TAG,"video time "+ts);
 
-                long t1 = TimeStamp.getAudioStamp();
-                long t2 = TimeStamp.getVideoStamp();
-                Log.d(TAG,"isSynchronized"+isSynchronized+" time delta"+Math.abs(t1-t2));
+                long au = TimeStamp.getAudioStamp();
+                long vi = TimeStamp.getVideoStamp();
+                Log.d(TAG,"video time "+vi);
+                Log.d(TAG,"audio time "+au);
+                Log.d(TAG,"isSynchronized:"+isSynchronized+" time delta"+Math.abs(au-vi));
+                long delta = au - vi;
+                long deltaABS = Math.abs(delta);
+                if (deltaABS>50){
+                    isSynchronized = false;
+                }
 
                 if (!isSynchronized){
-                    long au = TimeStamp.getAudioStamp();
-                    long vi = TimeStamp.getVideoStamp();
-                    long delta = au - vi;
-                    long deltaABS = Math.abs(delta);
-                    if ( deltaABS > 50){
+//                    long au = TimeStamp.getAudioStamp();
+//                    long vi = TimeStamp.getVideoStamp();
 
-                        if (delta<0){
-                            //audio behind
-                            videoSleep(deltaABS);
-                            isSynchronized = true;
+                    if (au!=0 && vi!=0){
+                        if ( deltaABS > 50 ){
+                            Log.d(TAG,"start synchronize, delta："+delta);
+
+                            if (delta<0){
+                                //audio behind
+                                videoSleep(deltaABS);
+//                                audioSleep(deltaABS);
+                                Log.d(TAG,"video sleep:"+deltaABS);
+
+    //                            isSynchronized = true;
+                            }else {
+                                //video behind
+                                this.audioSleep(deltaABS);
+//                                videoSleep(deltaABS);
+                                Log.d(TAG,"audio sleep:"+deltaABS);
+    //                            isSynchronized = true;
+                            }
                         }else {
-                            //video behind
-                            audioSleep(deltaABS);
                             isSynchronized = true;
                         }
-                    }else {
-                        isSynchronized = true;
                     }
                 }
 

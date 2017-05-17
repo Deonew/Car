@@ -24,8 +24,6 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Log.d(TAG,"okkkkkk");
-        Toast.makeText(getApplicationContext(), "默认Toast样式", Toast.LENGTH_SHORT).show();
         getWifiIP();
 
         //tablayout

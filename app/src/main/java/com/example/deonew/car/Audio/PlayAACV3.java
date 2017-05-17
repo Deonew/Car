@@ -17,6 +17,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -25,8 +27,7 @@ import static android.media.MediaCodec.INFO_TRY_AGAIN_LATER;
 public class PlayAACV3 {
 
     private static final String TAG = "PlayAACV3";
-    public static final int KEY_CHANNEL_COUNT = 0;
-    private decodeAAC decodeTH;
+    private decodeAAC decodeAACTH;
     private BlockingQueue<byte[]> recvQueue;
     private String path;//aac文件的路径。
 
@@ -38,27 +39,34 @@ public class PlayAACV3 {
     public PlayAACV3(VideoActivity3 ac) {
         mainAC = ac;
         this.recvQueue = mainAC.getAACRecvQueue();
+
+
+        decodeAACTH = new decodeAAC();
+        decodeAACTH.start();
     }
 
+    private boolean isSynchroning = false;
     public void audioSleep(long l){
-        try {
-            decodeTH.sleep(l);
-        }catch (InterruptedException e){}
-    }
-
-    public void start() {
-        Log.d(TAG,"start play");
-        if (decodeTH == null) {
-            decodeTH = new decodeAAC();
-            decodeTH.setRunning(true);
-            decodeTH.start();
+        if (!isSynchroning){
+            isSynchroning = true;
+            decodeAACTH.setRunning(false);
+            //set timer
+            Timer t = new Timer();
+            t.schedule(new TimerT(),l);
         }
     }
 
+
+
+    public void start() {
+        Log.d(TAG,"start play");
+        decodeAACTH.setRunning(true);
+    }
+
     public void stop() {
-        if (decodeTH != null) {
-            decodeTH.setRunning(false);
-            decodeTH = null;
+        if (decodeAACTH != null) {
+            decodeAACTH.setRunning(false);
+            decodeAACTH = null;
         }
 
     }
@@ -80,11 +88,7 @@ public class PlayAACV3 {
             if (!prepare()) {
                 isRunning = false;
             }
-            while (isRunning) {
-                Log.d(TAG,"play");
-                decode();
-            }
-            release();
+            decode();
         }
 
         private int sampleRate = 44100;
@@ -314,5 +318,13 @@ public class PlayAACV3 {
             }
         }
         return nextIndex;
+    }
+
+    class TimerT extends TimerTask{
+        @Override
+        public void run() {
+            isSynchroning = false;
+            decodeAACTH.setRunning(true);
+        }
     }
 }
