@@ -1,5 +1,6 @@
 package com.example.deonew.car.Main;
 
+import android.app.ActionBar;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -8,6 +9,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Window;
 import android.widget.Toast;
 
 import com.example.deonew.car.R;
@@ -22,6 +24,7 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         getWifiIP();
@@ -57,10 +60,8 @@ public class MainActivity extends AppCompatActivity{
         mainTabLayout.setTabMode(TabLayout.MODE_FIXED);
 
 
-    }
 
-    //-----------wifi处理部分
-    //等待分出一个类
+    }
     /*
     * func: get wifi[obu]'s ip
     * return: ip in String format

@@ -67,7 +67,7 @@ public class VideoActivity3 extends FragmentActivity {
         initBtn();
 
 
-        editText = (EditText)findViewById(R.id.sendEditText);
+//        editText = (EditText)findViewById(R.id.sendEditText);
 
     }
 
@@ -111,14 +111,14 @@ public class VideoActivity3 extends FragmentActivity {
         });
 
         //-------set
-        Button setSendBtn = (Button)findViewById(R.id.setSendBtn);
-        setSendBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG,"set sendBtn clicked");
-                setSendIP();
-            }
-        });
+//        Button setSendBtn = (Button)findViewById(R.id.setSendBtn);
+//        setSendBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Log.d(TAG,"set sendBtn clicked");
+//                setSendIP();
+//            }
+//        });
     }
 
 

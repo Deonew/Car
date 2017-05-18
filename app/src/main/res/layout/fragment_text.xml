@@ -4,42 +4,71 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
+
+
+
+    <!--send part-->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/sendTextInput"
-        android:text="nihao"/>
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+    <!--android:background="@color/colorPrimaryDark"-->
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="send text"
-        android:id="@+id/mainSendTextBtn"/>
+        <!--send history-->
+
+        <!--bottom input-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true">
+            <EditText
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:id="@+id/sendTextInput"
+                android:hint="type here"/>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="send text"
+                android:id="@+id/mainSendTextBtn"/>
+            <android.support.design.widget.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/pen"
+                android:id="@+id/TextFragmentPen"
+                app:backgroundTint="#fff"
+                app:layout_anchorGravity="bottom|right"/>
+        </LinearLayout>
+    </RelativeLayout>
 
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="text from server:"/>
+    <!--receive part-->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@color/yellow">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="300px"
-        android:text=""
-        android:id="@+id/showRecvText"/>
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="text from server:"/>-->
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/mainRecvTextBtn"
-        android:text="receive"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:id="@+id/showRecvText"/>
 
-    <android.support.design.widget.FloatingActionButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/pen"
-        android:id="@+id/TextFragmentPen"
-        app:backgroundTint="#fff"
-        app:layout_anchorGravity="bottom|right"/>
-        <!--app:backgroundTint="#2b7539"/>-->
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/mainRecvTextBtn"
+            android:text="receive"/>
+
+    </RelativeLayout>
+
 </LinearLayout>

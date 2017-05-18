@@ -136,6 +136,7 @@ public class TextFragment extends Fragment{
     }
     private EditText toSendEditText = null;
 
+
     class sendTextRun implements Runnable{
         @Override
         public void run() {
