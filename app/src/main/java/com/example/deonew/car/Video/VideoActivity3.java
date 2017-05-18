@@ -121,7 +121,6 @@ public class VideoActivity3 extends FragmentActivity {
 //        });
     }
 
-
     private EditText editText;
     private String sendIP = "10.1.1.1";
     private String recvIP = "10.1.1.1";

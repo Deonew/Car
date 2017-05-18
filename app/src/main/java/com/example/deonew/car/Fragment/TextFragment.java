@@ -4,21 +4,26 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.deonew.car.Main.MainActivity;
 import com.example.deonew.car.R;
+import com.example.deonew.car.Video.VideoActivity3;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.util.ArrayList;
 
 /**
  * Created by deonew on 17-4-4.
@@ -36,6 +41,11 @@ public class TextFragment extends Fragment{
     //component
     private TextView showRecv;
 
+
+    private DatagramSocket ds = null;
+    private MainActivity mainAC=null;
+
+    private EditText e;
     //ui handler
     private Handler UIHandler;
 //    public void setUIHandler(Handler h){
@@ -52,44 +62,23 @@ public class TextFragment extends Fragment{
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        try {
+            ds = new DatagramSocket(9997);
+        }catch (IOException e){}
+//
+
         //startSendH264 component
         initComponent();
-
-        //send thread
-        mSendTextRun = new sendTextRun();
-        new Thread(mSendTextRun).start();
-        Log.d(TAG,"start");
-
-        //
-//        Looper.prepare();
-        mTextFragmentHandler = new Handler(){
-            @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-
-                Log.d(TAG,"rece");
-//                getActivity().getHa8
-//                showRecv.append("recv");
-//                showRecv.post(new Runnable(){
-//                    @Override
-//                    public void run() {
-//                        showRecv.append("recv");
-//                    }
-//                });
-            }
-        };
-//        Looper.loop();
+//
 
     }
     public void initComponent(){
-//        UIHandler =
         showRecv = (TextView)getActivity().findViewById(R.id.showRecvText);
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-//        return super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_text,container,false);
         return view;
     }
@@ -103,7 +92,7 @@ public class TextFragment extends Fragment{
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                penClick();
+                sendClick();
 //                (MainActivity)getActivity().sendText();
             }
         });
@@ -118,76 +107,64 @@ public class TextFragment extends Fragment{
         });
 
         //set click event
-        final FloatingActionButton floatingActionButton = (FloatingActionButton)getActivity().findViewById(R.id.TextFragmentPen);
-        floatingActionButton.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-//                floatingActionButton.
-                penClick();
-            }
-        });
+//        final FloatingActionButton floatingActionButton = (FloatingActionButton)getActivity().findViewById(R.id.TextFragmentPen);
+//        floatingActionButton.setOnClickListener(new View.OnClickListener(){
+//            @Override
+//            public void onClick(View v) {
+////                floatingActionButton.
+//                sendClick();
+//            }
+//        });
+
+        mainAC  = (MainActivity)getActivity();
+        e = (EditText)mainAC.findViewById(R.id.sendTextInput);
+        if (e == null){
+            Log.d(TAG,"errrrrr");
+        }else {
+            Log.d(TAG,"its ok");
+        }
+
+
+        //
+
+        ListView lv = (ListView) mainAC.findViewById(R.id.textHistoryList);
+        ssss.add("hhh");
+        textSendAdapter = new ArrayAdapter<String>(this.getContext(),R.layout.text_send_item,ssss);
+        lv.setAdapter(textSendAdapter);
+
     }
-    public void penClick(){
-        //submit
-        isSendText = true;
+    private ArrayAdapter<String> textSendAdapter;
+    private ArrayList<String> ssss = new ArrayList();
+
+    public void sendClick(){
+        mainAC.sendTextClick();
+    }
+    public void sendText(String s){
+
+        ssss.add(s);
+        textSendAdapter.notifyDataSetChanged();
+        new sendTextRun(s).start();
     }
     public void recvText(){
         isRecvText = true;
     }
-    private EditText toSendEditText = null;
 
-
-    class sendTextRun implements Runnable{
+    class sendTextRun extends Thread{
+        private String sendS = null;
+        public sendTextRun(String s){
+            this.sendS = s;
+        }
         @Override
         public void run() {
-            while (true){
-                if (isSendText){
-                    //send
+            //UDP send
+            try {
 
-                    //get content
-                    toSendEditText = (EditText) getActivity().findViewById(R.id.sendTextInput);
-                    String s = toSendEditText.getText().toString();
-
-                    //socket send
-                    try {
-//                        Socket socket = new Socket("10.105.39.47",20001);
-                        Socket socket = new Socket("10.105.36.224 ",20001);
-                        DataOutputStream os =  new DataOutputStream(socket.getOutputStream());
-                        os.writeUTF(s);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    //
-                    isSendText = false;
-                }
-                if (isRecvText){
-                    Log.d(TAG,"success");
-                    try {
-//                        Socket socket = new Socket("10.105.39.47",20001);
-//                        Socket socket = new Socket("192.168.1.109",20001);
-                        Socket socket = new Socket("10.105.36.224 ",20001);
-
-                        socket.close();
-//                        DataInputStream is =  new DataInputStream(socket.getInputStream());
-
-                        //get text data
-                        mTextFragmentHandler.sendEmptyMessage(0);
-//                        showRecv.post(new Runnable(){
-//                            @Override
-//                            public void run() {
-//                                showRecv.append("recv");
-//                            }
-//                        });
-
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    isRecvText = false;
-                }
-            }
+                byte[] strBytes = sendS.getBytes();
+                InetAddress sendAddr = InetAddress.getByName("10.202.0.202");
+                DatagramPacket dpSend = new DatagramPacket(strBytes,strBytes.length,sendAddr,9997);
+                ds.send(dpSend);
+                Log.d(TAG,"send: "+sendS);
+            }catch (IOException e){}
         }
     }
 }

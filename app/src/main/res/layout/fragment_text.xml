@@ -16,13 +16,20 @@
     <!--android:background="@color/colorPrimaryDark"-->
 
         <!--send history-->
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/textHistoryList">
+
+        </ListView>
 
         <!--bottom input-->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_alignParentBottom="true">
+            android:layout_alignParentBottom="true"
+            android:background="@color/gainsboro">
             <EditText
                 android:layout_width="0dp"
                 android:layout_weight="1"
