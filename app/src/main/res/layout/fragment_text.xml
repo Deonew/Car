@@ -13,14 +13,13 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:orientation="vertical">
-    <!--android:background="@color/colorPrimaryDark"-->
 
         <!--send history-->
         <ListView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:footerDividersEnabled="false"
             android:id="@+id/textHistoryList">
-
         </ListView>
 
         <!--bottom input-->
@@ -30,24 +29,22 @@
             android:orientation="horizontal"
             android:layout_alignParentBottom="true"
             android:background="@color/gainsboro">
+
             <EditText
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:id="@+id/sendTextInput"
                 android:hint="type here"/>
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="send text"
-                android:id="@+id/mainSendTextBtn"/>
             <android.support.design.widget.FloatingActionButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/pen"
                 android:id="@+id/TextFragmentPen"
                 app:backgroundTint="#fff"
-                app:layout_anchorGravity="bottom|right"/>
+                app:borderWidth="0dp"
+                app:fabSize="mini"
+                app:layout_anchorGravity="bottom|right" />
         </LinearLayout>
     </RelativeLayout>
 
@@ -56,26 +53,40 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="@color/yellow">
+        android:layout_weight="1">
 
-        <!--<TextView-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="text from server:"/>-->
-
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=""
-            android:id="@+id/showRecvText"/>
+            android:orientation="vertical">
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/mainRecvTextBtn"
-            android:text="receive"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_alignParentTop="true">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="20dp"
+                    android:text="receive status:"/>
 
+                <com.suke.widget.SwitchButton
+                    android:id="@+id/recvSwitchButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp" />
+
+            </LinearLayout>
+
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/recvTextListView">
+            </ListView>
+
+        </LinearLayout>
     </RelativeLayout>
 
 </LinearLayout>

@@ -97,28 +97,10 @@ public class MainActivity extends AppCompatActivity{
         String s = sendEditText.getText().toString();
         TextFragment te = (TextFragment)mainViewPagerAdapter.getFragment(0);
         te.sendText(s);
-//        viewPager.getCurrentItem().send
-//        mainViewPagerAdapter.getItem(0).sendText(s);
     }
-//
-//    class sendTextRun extends Thread{
-//        private String sendS = null;
-//        public sendTextRun(String s){
-//            this.sendS = s;
-//        }
-//        @Override
-//        public void run() {
-//
-//
-//            //UDP send
-//            try {
-//
-//                byte[] strBytes = sendS.getBytes();
-//                InetAddress sendAddr = InetAddress.getByName("10.202.0.202");
-//                DatagramPacket dpSend = new DatagramPacket(strBytes,strBytes.length,sendAddr,9997);
-//                ds.send(dpSend);
-//                Log.d(TAG,"send: "+sendS);
-//            }catch (IOException e){}
-//        }
+//    public void onceTextRecv(String str){
+//        TextFragment te = (TextFragment)mainViewPagerAdapter.getFragment(0);
+//        te.receiveText(str);
 //    }
+
 }

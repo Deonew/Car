@@ -38,6 +38,12 @@ public class VideoActivity3 extends FragmentActivity {
     private Button recordH264Btn = null;
 
     @Override
+    public void onBackPressed() {
+        VideoActivity3.this.finish();
+//        super.onBackPressed();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_video3);
@@ -182,7 +188,6 @@ public class VideoActivity3 extends FragmentActivity {
 //            Log.d(TAG,toOfferWithTS.length+"");
 //            totalSendcnt++;
         }
-//        Log.d(TAG,"offer one h264 and send size:"+getH264SendQueue().size()+"         "+ totalSendcnt);
     }
 
     public void sendH264Click(){

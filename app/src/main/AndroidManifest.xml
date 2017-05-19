@@ -43,7 +43,6 @@
         <activity android:name=".Audio.AudioActivity2"/>
 
         <!--video-->
-        <activity android:name=".Video.VideoActivity2"/>
         <activity
             android:name=".Video.VideoActivity3"
             android:theme="@style/AppTheme"/>
