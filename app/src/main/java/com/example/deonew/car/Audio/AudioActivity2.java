@@ -15,17 +15,17 @@ import java.util.concurrent.BlockingQueue;
 
 public class AudioActivity2 extends Activity{
 
-    private SendAAC sendAAC;
-    private RecvAAC recvAAC;
+//    private SendAAC sendAAC;
+//    private RecvAAC recvAAC;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_audio3);
 
-        recvAAC = new RecvAAC(this);
+//        recvAAC = new RecvAAC(this);
 
-        sendAAC = new SendAAC(this);
+//        sendAAC = new SendAAC(this);
 
         //
         recordAAC = new RecordAAC(this);
@@ -35,12 +35,12 @@ public class AudioActivity2 extends Activity{
     //--------------------------------------------click event
     public void sendAudio(View v){
         setSendAacStatus(true);
-        sendAAC.startSendAAC();
+//        sendAAC.startSendAAC();
     }
 
     public void setSendAacStatus(boolean value){
         isSendingAac = value;
-        sendAAC.setSendAacStatus(value);
+//        sendAAC.setSendAacStatus(value);
     }
 
     private boolean isRecvAAC = false;

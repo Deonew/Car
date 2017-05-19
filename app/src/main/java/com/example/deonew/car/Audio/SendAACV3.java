@@ -2,12 +2,10 @@ package com.example.deonew.car.Audio;
 
 import android.util.Log;
 
-import com.example.deonew.car.Test;
 import com.example.deonew.car.Video.VideoActivity3;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.annotation.Target;
 import java.net.Socket;
 
 /**

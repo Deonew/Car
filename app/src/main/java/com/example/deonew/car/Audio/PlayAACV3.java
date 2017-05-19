@@ -10,12 +10,15 @@ import android.media.MediaFormat;
 import android.os.Environment;
 import android.util.Log;
 
+import com.example.deonew.car.Tool.TimeStamp;
 import com.example.deonew.car.Video.VideoActivity3;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -24,37 +27,51 @@ import static android.media.MediaCodec.INFO_TRY_AGAIN_LATER;
 public class PlayAACV3 {
 
     private static final String TAG = "PlayAACV3";
-    public static final int KEY_CHANNEL_COUNT = 0;
-    private Worker mWorker;
+    private decodeAAC decodeAACTH;
+    private BlockingQueue<byte[]> recvQueue;
     private String path;//aac文件的路径。
 
-    public PlayAACV3(String filename) {
-        this.path = filename;
-        readFile();
-    }
+//    public PlayAACV3(String filename) {
+//        this.path = filename;
+//        readFile();
+//    }
     private VideoActivity3 mainAC = null;
     public PlayAACV3(VideoActivity3 ac) {
         mainAC = ac;
+        this.recvQueue = mainAC.getAACRecvQueue();
+
+
+        decodeAACTH = new decodeAAC();
+        decodeAACTH.start();
     }
+
+    private boolean isSynchroning = false;
+    public void audioSleep(long l){
+        if (!isSynchroning){
+            isSynchroning = true;
+            decodeAACTH.setRunning(false);
+            //set timer
+            Timer t = new Timer();
+            t.schedule(new TimerT(),l);
+        }
+    }
+
+
 
     public void start() {
         Log.d(TAG,"start play");
-        if (mWorker == null) {
-            mWorker = new Worker();
-            mWorker.setRunning(true);
-            mWorker.start();
-        }
+        decodeAACTH.setRunning(true);
     }
 
     public void stop() {
-        if (mWorker != null) {
-            mWorker.setRunning(false);
-            mWorker = null;
+        if (decodeAACTH != null) {
+            decodeAACTH.setRunning(false);
+            decodeAACTH = null;
         }
 
     }
 
-    private class Worker extends Thread {
+    class decodeAAC extends Thread {
         private static final int KEY_SAMPLE_RATE = 0;
         private boolean isRunning = false;
         private AudioTrack mPlayer;
@@ -71,24 +88,22 @@ public class PlayAACV3 {
             if (!prepare()) {
                 isRunning = false;
             }
-            while (isRunning) {
-                Log.d("aaaaaaaaa","decode");
-                decode();
-            }
-            release();
+            decode();
         }
 
         private int sampleRate = 44100;
         //stereo
+//        private int channelConf = AudioFormat.CHANNEL_IN_MONO;
         private int channelConf = AudioFormat.CHANNEL_IN_STEREO;
         //data format
         private int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
-        private int miniBuffSize = 0;
+        private int channelCount = 2;
+        private int miniBuffSize;
         private InputStream fis = null;
         private String audioPath = Environment.getExternalStorageDirectory() + "/carTemp.aac";
         public boolean prepare() {
 
-            miniBuffSize= AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat)*2;
+            miniBuffSize= AudioRecord.getMinBufferSize(sampleRate,channelConf,audioFormat);
             mPlayer = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConf, audioFormat, miniBuffSize, AudioTrack.MODE_STREAM);
             mPlayer.play();
             try {
@@ -97,8 +112,8 @@ public class PlayAACV3 {
 
                 MediaFormat mediaFormat = null;
 
-                mediaFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", 44100,2);
-                mediaFormat.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
+                mediaFormat = MediaFormat.createAudioFormat("audio/mp4a-latm", sampleRate,channelCount);
+//                mediaFormat.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
                 //adts header
                 mediaFormat.setInteger(MediaFormat.KEY_IS_ADTS, 1);
                 //csd-0
@@ -126,38 +141,42 @@ public class PlayAACV3 {
             MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
             boolean sawInputEOS = false;
             boolean sawOutputEOS = false;
-            try {
-                while (!sawOutputEOS) {
-                    if (!sawInputEOS) {
+            while (true){
+                if (isRunning){
+                    if (recvQueue.size()>0){
+                    Log.d(TAG,"laset queue size: "+ recvQueue.size());
 
-                        Log.d(TAG,"start put data");
-                        int inputBufIndex = mDecoder.dequeueInputBuffer(kTimeOutUs);
-                        if (inputBufIndex >= 0) {
-                            Log.d(TAG,"input available");
-                            ByteBuffer dstBuf = mDecoder.getInputBuffer(inputBufIndex);
+                    int inputBufIndex = mDecoder.dequeueInputBuffer(kTimeOutUs);
+                    if (inputBufIndex >= 0) {
+                        Log.d(TAG,"input available");
+                        ByteBuffer dstBuf = mDecoder.getInputBuffer(inputBufIndex);
+                        dstBuf.clear();
 //                            int sampleSize = extractor.readSampleData(dstBuf, 0);//get data from extractor
 
-                            byte[] b = null;
-                            for (int t = 0;t<2;t++){
-                                //put a frame of audio  file!!!!!!!!!!!!!!!
-                                b = getOneAACFrame();
-                            }
-                            dstBuf.put(b);
-                            int sampleSize = b.length;
+                        byte[] b = null;
+                        for (int t = 0;t<1;t++){
+                            //put a frame of audio  file!!!!!!!!!!!!!!!
+                            b = getOneAACFrame();
+                        }
+                        if (b == null){
+//                            b= new byte[]{0xf, 0xf, 0xf, 0x9,0x5,0x0,0x8,0x0};//0xfff95080
+                            b= new byte[]{(byte)0x0B, (byte)0x00, (byte)0x21, (byte)0x10, (byte)0x05, (byte)0x00, (byte)0xA0, (byte)0x19, (byte)0x33, (byte)0x87, (byte)0xC0, (byte)0x00, (byte)0x7E};
+                        }
 
-                            Log.d(TAG,"one frame");
+                        dstBuf.put(b);
+                        int sampleSize = b.length;
 
-                            // -1 means no more availalbe
-                            if (sampleSize < 0) {
-                                sawInputEOS = true;
-                                mDecoder.queueInputBuffer(inputBufIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-                            } else {
-                                mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, System.nanoTime()/1000, 0);
-                            }
-
-
+                        // -1 means no more availalbe
+                        if (sampleSize < 0) {
+                            sawInputEOS = true;
+                            mDecoder.queueInputBuffer(inputBufIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                        } else {
+                            mDecoder.queueInputBuffer(inputBufIndex, 0, sampleSize, System.nanoTime()/1000, 0);
                         }
                     }
+
+                    }
+
                     int outputBufferIndex = mDecoder.dequeueOutputBuffer(info, kTimeOutUs);
                     if (outputBufferIndex >= 0) {
                         Log.d(TAG,"output available");
@@ -174,14 +193,22 @@ public class PlayAACV3 {
                             outBuf.limit(info.offset + info.size);
                             byte[] data = new byte[info.size];
                             outBuf.get(data);
-                            mPlayer.write(data, 0, info.size);
+
+                            mPlayer.write(data, 0, data.length);
                             Log.d(TAG,"write one");
+
+                            try {
+                                Thread.sleep(10);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
                         mDecoder.releaseOutputBuffer(outputBufferIndex, false);
                         if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                             sawOutputEOS = true;
                             Log.d(TAG,"end");
                         }
+
                     }
                     else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                         MediaFormat oformat = mDecoder.getOutputFormat();
@@ -191,8 +218,6 @@ public class PlayAACV3 {
 
                     }
                 }
-            } finally {
-//                extractor.release();
             }
         }
 
@@ -215,18 +240,7 @@ public class PlayAACV3 {
     private int currentBuffStart = 0;//valid data start
     private int currentBuffEnd = 0;
     private BlockingQueue<byte[]> q = new ArrayBlockingQueue<byte[]>(10000);
-    public void readFile(){
-        try{
-            fis = new FileInputStream(this.path);
-            int hhh = 0;
-            do{
-                //new every time
-                byte[] i = new byte[1024];
-                hhh = fis.read(i);
-                q.offer(i);
-            }while(hhh != -1);
-        }catch (IOException e) {}
-    }
+
     public byte[] getOneAACFrame(){
         int n = getNextIndex();
         if (n == -1) {
@@ -247,17 +261,32 @@ public class PlayAACV3 {
 //            naluu = naluHead;
 //        }
 
-        
+
         return naluu;
     }
     private int nextAACHead = -1;
     public int getNextIndex(){
         nextAACHead = getNextIndexOnce();
         while(nextAACHead == -1) {
-            if (!mainAC.getAACRecvQueue().isEmpty()) {
-                byte[] tmp = mainAC.getAACRecvQueue().poll();
-                System.arraycopy(tmp,0,currentBuff,currentBuffEnd,tmp.length);
-                currentBuffEnd = currentBuffEnd + tmp.length;
+            if (!recvQueue.isEmpty()) {
+                byte[] tmp = recvQueue.poll();
+                int len = tmp.length;
+
+                //set timestamp
+                byte[] tBytes = new byte[8];
+                System.arraycopy(tmp,0,tBytes,0,8);
+                ByteBuffer bf = ByteBuffer.allocate(8);
+                bf.put(tBytes);
+                bf.flip();
+                long ts = bf.getLong();
+                TimeStamp.setAudioStamp(ts);
+
+                Log.d(TAG,"time "+ts);
+
+                byte[] validData = new byte[len-8];
+                System.arraycopy(tmp,8,validData,0,len-8);
+                System.arraycopy(validData,0,currentBuff,currentBuffEnd,validData.length);
+                currentBuffEnd = currentBuffEnd + validData.length;
                 nextAACHead = getNextIndexOnce();
             }else{
                 return -1;
@@ -268,10 +297,11 @@ public class PlayAACV3 {
     }
 
     public int getNextIndexOnce(){
+
         int nextIndex = -1;
         ByteBuffer b = ByteBuffer.allocate(4);
-        b.putInt(0xfff15080);//some times
-//        b.putInt(0xfff95080);
+//        b.putInt(0xfff15080);//aac file
+        b.putInt(0xfff95080);//record
         byte[] naluHead = b.array();
         int i = 0;
         int index = 0;
@@ -288,5 +318,13 @@ public class PlayAACV3 {
             }
         }
         return nextIndex;
+    }
+
+    class TimerT extends TimerTask{
+        @Override
+        public void run() {
+            isSynchroning = false;
+            decodeAACTH.setRunning(true);
+        }
     }
 }

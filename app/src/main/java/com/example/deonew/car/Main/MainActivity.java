@@ -1,5 +1,6 @@
 package com.example.deonew.car.Main;
 
+import android.app.ActionBar;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -8,24 +9,32 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Window;
+import android.widget.EditText;
+import android.widget.Toast;
 
+import com.example.deonew.car.Fragment.TextFragment;
 import com.example.deonew.car.R;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity{
     private MainViewPagerAdapter mainViewPagerAdapter;
-    private static final String TAG = MainActivity.class.getSimpleName();
+//    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = "MainActivity";
+    private ViewPager viewPager;
+    private EditText sendEditText = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
-        Log.d(TAG,"ok");
-
-//        setTagsForButtons();
-
+        getWifiIP();
 
         //tablayout
         TabLayout mainTabLayout = (TabLayout) findViewById(R.id.mainTabLayout);
@@ -43,9 +52,9 @@ public class MainActivity extends AppCompatActivity{
         //new adapter
         mainViewPagerAdapter = new MainViewPagerAdapter(getSupportFragmentManager(),this);
         //view pager and adapter
-        ViewPager viewPager = (ViewPager) findViewById(R.id.mainViewPager);
+        viewPager = (ViewPager) findViewById(R.id.mainViewPager);
         viewPager.setAdapter(mainViewPagerAdapter);
-
+//viewPager.getCurrentItem()
         //set default page
         viewPager.setCurrentItem(1);
 
@@ -58,13 +67,9 @@ public class MainActivity extends AppCompatActivity{
         mainTabLayout.setTabMode(TabLayout.MODE_FIXED);
 
 
-
-
-
     }
 
-    //-----------wifi处理部分
-    //等待分出一个类
+
     /*
     * func: get wifi[obu]'s ip
     * return: ip in String format
@@ -74,6 +79,7 @@ public class MainActivity extends AppCompatActivity{
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         int ipInt = wifiInfo.getIpAddress();
         String ipString = intToIp(ipInt);
+        Log.d(TAG," ip: "+ipString);
         return ipString;
     }
 
@@ -83,4 +89,18 @@ public class MainActivity extends AppCompatActivity{
                 ((i >> 16 ) & 0xFF) + "." +
                 ( i >> 24 & 0xFF) ;
     }
+
+
+
+    public void sendTextClick(){
+        sendEditText = (EditText) findViewById(R.id.sendTextInput);
+        String s = sendEditText.getText().toString();
+        TextFragment te = (TextFragment)mainViewPagerAdapter.getFragment(0);
+        te.sendText(s);
+    }
+//    public void onceTextRecv(String str){
+//        TextFragment te = (TextFragment)mainViewPagerAdapter.getFragment(0);
+//        te.receiveText(str);
+//    }
+
 }

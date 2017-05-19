@@ -22,10 +22,11 @@ public class AudioFragmentV3 extends Fragment {
 
     private VideoActivity3 mainAC;
     private RecordAACV3 recordAACV3;
-    private SendAACV3 sendAACV3;
-    private RecvAACV3 recvAACV3;
     private PlayAACV3 playAACV3;
 
+    private Button sendAACBtn = null;
+    private Button recordAACBtn = null;
+    private Button recvAACBtn = null;
 
     @Nullable
     @Override
@@ -38,14 +39,7 @@ public class AudioFragmentV3 extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        //
-//        sendAAC = new SendAAC(mainAC);
         recordAACV3 = new RecordAACV3(mainAC);
-
-//        sendAACV3 = new SendAACV3(mainAC);
-
-//        recvAACV3 = new RecvAACV3(mainAC);
-
         playAACV3 = new PlayAACV3(mainAC);
     }
 
@@ -57,29 +51,28 @@ public class AudioFragmentV3 extends Fragment {
 
     }
 
+
+
     public void initBtn(){
-        Button button = (Button)getActivity().findViewById(R.id.recordAACV3);
-        button.setOnClickListener(new View.OnClickListener() {
+        recordAACBtn = (Button)getActivity().findViewById(R.id.recordAACV3);
+        recordAACBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG,"clicked");
-                startRecordAACV3();
+                recordAACV3Click();
             }
         });
-        Button sendBtn = (Button)getActivity().findViewById(R.id.sendAACV3);
-        sendBtn.setOnClickListener(new View.OnClickListener() {
+        sendAACBtn = (Button)getActivity().findViewById(R.id.sendAACV3);
+        sendAACBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startSendAACV3();
-                Log.d(TAG,"send aac");
+                sendAACClick();
             }
         });
-        Button recvBtn = (Button)getActivity().findViewById(R.id.recvAACV3);
-        recvBtn.setOnClickListener(new View.OnClickListener() {
+        recvAACBtn = (Button)getActivity().findViewById(R.id.recvAACV3);
+        recvAACBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startRecvAACV3();
-                Log.d(TAG,"recv aac");
+                recvAACClick();
             }
         });
         Button playBtn = (Button)getActivity().findViewById(R.id.playAACV3);
@@ -87,34 +80,56 @@ public class AudioFragmentV3 extends Fragment {
             @Override
             public void onClick(View v) {
                 startPlayAACV3();
-                Log.d(TAG,"play aac");
             }
         });
     }
 
     private boolean isRecordAAC = false;
-    public void startRecordAACV3(){
-
-        if (!isRecordAAC){
-            recordAACV3.startRecord();
-            isRecordAAC = true;
+    public void recordAACV3Click(){
+        isRecordAAC = !isRecordAAC;
+        if (isRecordAAC){
+            startRecordAACV3();
+        }else {
+            stopRecordAACV3();
         }
-
     }
 
-    public void startSendAACV3(){
-        mainAC.startSendAAC();
+    public void startRecordAACV3(){
+        recordAACV3.startRecord();
+        recordAACBtn.setText("stopReco");
+    }
+    public void stopRecordAACV3(){
+        recordAACV3.stopRecord();
+        recordAACBtn.setText("startReco");
     }
 
+    public void sendAACClick(){
+        mainAC.sendAACClick();
+    }
+//    public void startSendAACV3(){
+//        mainAC.startSendAAC();
+//    }
+//    public void stopSendAACV3(){
+//        mainAC.stopSendAAC();
+//    }
+
+    public void recvAACClick(){
+        mainAC.recvAACClick();
+    }
     public void startRecvAACV3(){
-        mainAC.startRecvAAC();
+        recvAACBtn.setText("stopRecv");
+    }
+    public void stopRecvAACV3(){
+        recvAACBtn.setText("startRecv");
     }
 
     public void startPlayAACV3(){
-
         playAACV3.start();
     }
 
-
+    public void audioSleep(long l){
+        playAACV3.audioSleep(l);
+        Log.d(TAG,"audio sleep"+l);
+    }
 
 }
